@@ -1,0 +1,621 @@
+-- Gui to Lua
+-- Version: 3.2
+
+-- Instances:
+
+local ScreenGui = Instance.new("ScreenGui")
+local UniversalFrame = Instance.new("Frame")
+local TextLabel = Instance.new("TextLabel")
+local UICorner = Instance.new("UICorner")
+local ScrollingFrame = Instance.new("ScrollingFrame")
+local ImageLabel = Instance.new("ImageLabel")
+local UICorner_2 = Instance.new("UICorner")
+local ExecuteSolaris = Instance.new("TextButton")
+local UICorner_3 = Instance.new("UICorner")
+local ImageLabel_2 = Instance.new("ImageLabel")
+local UICorner_4 = Instance.new("UICorner")
+local ExecuteDarkHub = Instance.new("TextButton")
+local UICorner_5 = Instance.new("UICorner")
+local ImageLabel_3 = Instance.new("ImageLabel")
+local UICorner_6 = Instance.new("UICorner")
+local ExecuteEvoV2 = Instance.new("TextButton")
+local UICorner_7 = Instance.new("UICorner")
+local ImageLabel_4 = Instance.new("ImageLabel")
+local UICorner_8 = Instance.new("UICorner")
+local ExecuteVestra = Instance.new("TextButton")
+local UICorner_9 = Instance.new("UICorner")
+local ImageLabel_5 = Instance.new("ImageLabel")
+local UICorner_10 = Instance.new("UICorner")
+local ExecuteVGHub = Instance.new("TextButton")
+local UICorner_11 = Instance.new("UICorner")
+local ImageLabel_6 = Instance.new("ImageLabel")
+local UICorner_12 = Instance.new("UICorner")
+local ExecuteStrawHooks = Instance.new("TextButton")
+local UICorner_13 = Instance.new("UICorner")
+local ImageLabel_7 = Instance.new("ImageLabel")
+local UICorner_14 = Instance.new("UICorner")
+local ImageLabel_8 = Instance.new("ImageLabel")
+local UICorner_15 = Instance.new("UICorner")
+local ExecuteBoltsHub = Instance.new("TextButton")
+local UICorner_16 = Instance.new("UICorner")
+local ExecuteZyrexHub = Instance.new("TextButton")
+local UICorner_17 = Instance.new("UICorner")
+local ImageLabel_9 = Instance.new("ImageLabel")
+local UICorner_18 = Instance.new("UICorner")
+local ExecuteKebabHub = Instance.new("TextButton")
+local UICorner_19 = Instance.new("UICorner")
+local ImageLabel_10 = Instance.new("ImageLabel")
+local UICorner_20 = Instance.new("UICorner")
+local ExecuteParvusHub = Instance.new("TextButton")
+local UICorner_21 = Instance.new("UICorner")
+local ImageLabel_11 = Instance.new("ImageLabel")
+local UICorner_22 = Instance.new("UICorner")
+local ImageLabel_12 = Instance.new("ImageLabel")
+local UICorner_23 = Instance.new("UICorner")
+local ImageLabel_13 = Instance.new("ImageLabel")
+local UICorner_24 = Instance.new("UICorner")
+local ImageLabel_14 = Instance.new("ImageLabel")
+local UICorner_25 = Instance.new("UICorner")
+local ImageLabel_15 = Instance.new("ImageLabel")
+local UICorner_26 = Instance.new("UICorner")
+local ImageLabel_16 = Instance.new("ImageLabel")
+local UICorner_27 = Instance.new("UICorner")
+local ExecuteOwlHub = Instance.new("TextButton")
+local UICorner_28 = Instance.new("UICorner")
+local ExecuteSorkyHub = Instance.new("TextButton")
+local UICorner_29 = Instance.new("UICorner")
+local ExecuteMonkeHub = Instance.new("TextButton")
+local UICorner_30 = Instance.new("UICorner")
+local ExecuteStefan = Instance.new("TextButton")
+local UICorner_31 = Instance.new("UICorner")
+local ExecuteStefan_2 = Instance.new("TextButton")
+local UICorner_32 = Instance.new("UICorner")
+local ExecuteZephyrX = Instance.new("TextButton")
+local UICorner_33 = Instance.new("UICorner")
+local ExecuteSirius = Instance.new("TextButton")
+local UICorner_34 = Instance.new("UICorner")
+local TextLabel_2 = Instance.new("TextLabel")
+local UICorner_35 = Instance.new("UICorner")
+local Close = Instance.new("TextButton")
+local UICorner_36 = Instance.new("UICorner")
+local Minimize = Instance.new("TextButton")
+local UICorner_37 = Instance.new("UICorner")
+local UITOGGLERFrame = Instance.new("Frame")
+local UICorner_38 = Instance.new("UICorner")
+local OpensTheFrame = Instance.new("TextButton")
+local UICorner_39 = Instance.new("UICorner")
+
+--Properties:
+
+ScreenGui.Parent = game.CoreGui
+
+UniversalFrame.Name = "Universal Frame"
+UniversalFrame.Parent = ScreenGui
+UniversalFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+UniversalFrame.Position = UDim2.new(0.217426702, 0, 0.227059752, 0)
+UniversalFrame.Size = UDim2.new(0, 716, 0, 379)
+UniversalFrame.Active = true
+UniversalFrame.Draggable = true
+
+TextLabel.Parent = UniversalFrame
+TextLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TextLabel.BorderColor3 = Color3.fromRGB(27, 42, 53)
+TextLabel.Position = UDim2.new(0.247747332, 0, 0, 0)
+TextLabel.Size = UDim2.new(0, 321, 0, 41)
+TextLabel.Font = Enum.Font.SourceSans
+TextLabel.Text = "Universal / Shooter Games"
+TextLabel.TextColor3 = Color3.fromRGB(0, 93, 31)
+TextLabel.TextSize = 28.000
+
+UICorner.Parent = TextLabel
+
+ScrollingFrame.Parent = UniversalFrame
+ScrollingFrame.Active = true
+ScrollingFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+ScrollingFrame.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ScrollingFrame.Position = UDim2.new(-0.00130074751, 0, 0.110817939, 0)
+ScrollingFrame.Size = UDim2.new(0, 716, 0, 337)
+
+ImageLabel.Parent = ScrollingFrame
+ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel.Position = UDim2.new(0.0133285951, 0, 0.0149198882, 0)
+ImageLabel.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel.Image = "rbxassetid://10358226613"
+ImageLabel.ScaleType = Enum.ScaleType.Crop
+
+UICorner_2.Parent = ImageLabel
+
+ExecuteSolaris.Name = "Execute Solaris"
+ExecuteSolaris.Parent = ScrollingFrame
+ExecuteSolaris.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteSolaris.Position = UDim2.new(0.0125740096, 0, 0.116801262, 0)
+ExecuteSolaris.Size = UDim2.new(0, 140, 0, 37)
+ExecuteSolaris.Font = Enum.Font.SourceSans
+ExecuteSolaris.Text = "Solaris Hub"
+ExecuteSolaris.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteSolaris.TextSize = 24.000
+ExecuteSolaris.TextWrapped = true
+ExecuteSolaris.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet('https://solarishub.net/script.lua',true))()
+end)
+
+UICorner_3.Parent = ExecuteSolaris
+
+ImageLabel_2.Parent = ScrollingFrame
+ImageLabel_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_2.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_2.Position = UDim2.new(0.257741988, 0, 0.0149198882, 0)
+ImageLabel_2.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_2.Image = "rbxassetid://10358226613"
+ImageLabel_2.ScaleType = Enum.ScaleType.Crop
+
+UICorner_4.Parent = ImageLabel_2
+
+ExecuteDarkHub.Name = "Execute Dark Hub"
+ExecuteDarkHub.Parent = ScrollingFrame
+ExecuteDarkHub.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteDarkHub.Position = UDim2.new(0.256987393, 0, 0.116801262, 0)
+ExecuteDarkHub.Size = UDim2.new(0, 140, 0, 37)
+ExecuteDarkHub.Font = Enum.Font.SourceSans
+ExecuteDarkHub.Text = "Dark Hub"
+ExecuteDarkHub.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteDarkHub.TextSize = 24.000
+ExecuteDarkHub.TextWrapped = true
+ExecuteDarkHub.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet("https://darkhub.xyz/remote-script.lua", true))()
+end)
+
+UICorner_5.Parent = ExecuteDarkHub
+
+ImageLabel_3.Parent = ScrollingFrame
+ImageLabel_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_3.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_3.Position = UDim2.new(0.502155423, 0, 0.0149198882, 0)
+ImageLabel_3.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_3.Image = "rbxassetid://10358226613"
+ImageLabel_3.ScaleType = Enum.ScaleType.Crop
+
+UICorner_6.Parent = ImageLabel_3
+
+ExecuteEvoV2.Name = "Execute Evo V2"
+ExecuteEvoV2.Parent = ScrollingFrame
+ExecuteEvoV2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteEvoV2.Position = UDim2.new(0.501400828, 0, 0.116801262, 0)
+ExecuteEvoV2.Size = UDim2.new(0, 140, 0, 37)
+ExecuteEvoV2.Font = Enum.Font.SourceSans
+ExecuteEvoV2.Text = "Project Evo V2"
+ExecuteEvoV2.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteEvoV2.TextSize = 24.000
+ExecuteEvoV2.TextWrapped = true
+ExecuteEvoV2.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet("https://projectevo.xyz/script/loader.lua"))()
+end)
+
+UICorner_7.Parent = ExecuteEvoV2
+
+ImageLabel_4.Parent = ScrollingFrame
+ImageLabel_4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_4.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_4.Position = UDim2.new(0.740982234, 0, 0.0149198882, 0)
+ImageLabel_4.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_4.Image = "rbxassetid://10358226613"
+ImageLabel_4.ScaleType = Enum.ScaleType.Crop
+
+UICorner_8.Parent = ImageLabel_4
+
+ExecuteVestra.Name = "Execute  Vestra"
+ExecuteVestra.Parent = ScrollingFrame
+ExecuteVestra.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteVestra.Position = UDim2.new(0.74022764, 0, 0.116801262, 0)
+ExecuteVestra.Size = UDim2.new(0, 140, 0, 37)
+ExecuteVestra.Font = Enum.Font.SourceSans
+ExecuteVestra.Text = "Vestra Hub V5"
+ExecuteVestra.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteVestra.TextSize = 24.000
+ExecuteVestra.TextWrapped = true
+ExecuteVestra.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/xandudiscord/vestra/main/loader.lua"))()
+end)
+
+UICorner_9.Parent = ExecuteVestra
+
+ImageLabel_5.Parent = ScrollingFrame
+ImageLabel_5.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_5.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_5.Position = UDim2.new(0.0133286119, 0, 0.179827541, 0)
+ImageLabel_5.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_5.Image = "rbxassetid://10358226613"
+ImageLabel_5.ScaleType = Enum.ScaleType.Crop
+
+UICorner_10.Parent = ImageLabel_5
+
+ExecuteVGHub.Name = "Execute  VG Hub"
+ExecuteVGHub.Parent = ScrollingFrame
+ExecuteVGHub.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteVGHub.Position = UDim2.new(0.012574017, 0, 0.279070377, 0)
+ExecuteVGHub.Size = UDim2.new(0, 140, 0, 37)
+ExecuteVGHub.Font = Enum.Font.SourceSans
+ExecuteVGHub.Text = "VG Hub"
+ExecuteVGHub.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteVGHub.TextSize = 24.000
+ExecuteVGHub.TextWrapped = true
+ExecuteVGHub.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/1201for/V.G-Hub/main/V.Ghub'))()
+end)
+
+UICorner_11.Parent = ExecuteVGHub
+
+ImageLabel_6.Parent = ScrollingFrame
+ImageLabel_6.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_6.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_6.Position = UDim2.new(0.256345391, 0, 0.179827541, 0)
+ImageLabel_6.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_6.Image = "rbxassetid://10358226613"
+ImageLabel_6.ScaleType = Enum.ScaleType.Crop
+
+UICorner_12.Parent = ImageLabel_6
+
+ExecuteStrawHooks.Name = "Execute  StrawHooks"
+ExecuteStrawHooks.Parent = ScrollingFrame
+ExecuteStrawHooks.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteStrawHooks.Position = UDim2.new(0.255590796, 0, 0.279070377, 0)
+ExecuteStrawHooks.Size = UDim2.new(0, 140, 0, 37)
+ExecuteStrawHooks.Font = Enum.Font.SourceSans
+ExecuteStrawHooks.Text = "StrawHooks"
+ExecuteStrawHooks.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteStrawHooks.TextSize = 24.000
+ExecuteStrawHooks.TextWrapped = true
+ExecuteStrawHooks.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/VoidMasterX/strawhook/main/script.lua", true))()
+end)
+
+UICorner_13.Parent = ExecuteStrawHooks
+
+ImageLabel_7.Parent = ScrollingFrame
+ImageLabel_7.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_7.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_7.Position = UDim2.new(0.500758767, 0, 0.179827541, 0)
+ImageLabel_7.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_7.Image = "rbxassetid://10358226613"
+ImageLabel_7.ScaleType = Enum.ScaleType.Crop
+
+UICorner_14.Parent = ImageLabel_7
+
+ImageLabel_8.Parent = ScrollingFrame
+ImageLabel_8.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_8.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_8.Position = UDim2.new(0.739585578, 0, 0.179827541, 0)
+ImageLabel_8.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_8.Image = "rbxassetid://10358226613"
+ImageLabel_8.ScaleType = Enum.ScaleType.Crop
+
+UICorner_15.Parent = ImageLabel_8
+
+ExecuteBoltsHub.Name = "Execute  Bolts Hub"
+ExecuteBoltsHub.Parent = ScrollingFrame
+ExecuteBoltsHub.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteBoltsHub.Position = UDim2.new(0.500004232, 0, 0.279070377, 0)
+ExecuteBoltsHub.Size = UDim2.new(0, 140, 0, 37)
+ExecuteBoltsHub.Font = Enum.Font.SourceSans
+ExecuteBoltsHub.Text = "Bolts Hub"
+ExecuteBoltsHub.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteBoltsHub.TextSize = 24.000
+ExecuteBoltsHub.TextWrapped = true
+ExecuteBoltsHub.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/fusiongreg/BoltsHubV5/main/BoltsHubV5'))()
+end)
+
+UICorner_16.Parent = ExecuteBoltsHub
+
+ExecuteZyrexHub.Name = "Execute  Zyrex  Hub"
+ExecuteZyrexHub.Parent = ScrollingFrame
+ExecuteZyrexHub.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteZyrexHub.Position = UDim2.new(0.740227699, 0, 0.279070377, 0)
+ExecuteZyrexHub.Size = UDim2.new(0, 140, 0, 37)
+ExecuteZyrexHub.Font = Enum.Font.SourceSans
+ExecuteZyrexHub.Text = "Zyrex Hub"
+ExecuteZyrexHub.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteZyrexHub.TextSize = 24.000
+ExecuteZyrexHub.TextWrapped = true
+ExecuteBoltsHub.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/fusiongreg/BoltsHubV5/main/BoltsHubV5'))()
+end)
+
+UICorner_17.Parent = ExecuteZyrexHub
+
+ImageLabel_9.Parent = ScrollingFrame
+ImageLabel_9.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_9.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_9.Position = UDim2.new(0.0119319437, 0, 0.350012243, 0)
+ImageLabel_9.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_9.Image = "rbxassetid://10358226613"
+ImageLabel_9.ScaleType = Enum.ScaleType.Crop
+
+UICorner_18.Parent = ImageLabel_9
+
+ExecuteKebabHub.Name = "Execute Kebab  Hub"
+ExecuteKebabHub.Parent = ScrollingFrame
+ExecuteKebabHub.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteKebabHub.Position = UDim2.new(0.0111774374, 0, 0.453212857, 0)
+ExecuteKebabHub.Size = UDim2.new(0, 140, 0, 37)
+ExecuteKebabHub.Font = Enum.Font.SourceSans
+ExecuteKebabHub.Text = "Kebab  Hub"
+ExecuteKebabHub.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteKebabHub.TextSize = 24.000
+ExecuteKebabHub.TextWrapped = true
+ExecuteKebabHub.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet("www.kebabterminal.tk/main.lua"))()
+end)
+
+UICorner_19.Parent = ExecuteKebabHub
+
+ImageLabel_10.Parent = ScrollingFrame
+ImageLabel_10.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_10.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_10.Position = UDim2.new(0.256345361, 0, 0.350012243, 0)
+ImageLabel_10.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_10.Image = "rbxassetid://10358226613"
+ImageLabel_10.ScaleType = Enum.ScaleType.Crop
+
+UICorner_20.Parent = ImageLabel_10
+
+ExecuteParvusHub.Name = "Execute  Parvus Hub"
+ExecuteParvusHub.Parent = ScrollingFrame
+ExecuteParvusHub.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteParvusHub.Position = UDim2.new(0.2541942, 0, 0.453212857, 0)
+ExecuteParvusHub.Size = UDim2.new(0, 140, 0, 37)
+ExecuteParvusHub.Font = Enum.Font.SourceSans
+ExecuteParvusHub.Text = "Parvus Hub"
+ExecuteParvusHub.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteParvusHub.TextSize = 24.000
+ExecuteParvusHub.TextWrapped = true
+ExecuteParvusHub.MouseButton1Down:connect(function()
+	loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AlexR32/Parvus/main/Loader.lua"))("Parvus hitting p!")
+end)
+
+UICorner_21.Parent = ExecuteParvusHub
+
+ImageLabel_11.Parent = ScrollingFrame
+ImageLabel_11.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_11.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_11.Position = UDim2.new(0.499362111, 0, 0.350012243, 0)
+ImageLabel_11.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_11.Image = "rbxassetid://10358226613"
+ImageLabel_11.ScaleType = Enum.ScaleType.Crop
+
+UICorner_22.Parent = ImageLabel_11
+
+ImageLabel_12.Parent = ScrollingFrame
+ImageLabel_12.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_12.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_12.Position = UDim2.new(0.738188922, 0, 0.350012243, 0)
+ImageLabel_12.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_12.Image = "rbxassetid://10358226613"
+ImageLabel_12.ScaleType = Enum.ScaleType.Crop
+
+UICorner_23.Parent = ImageLabel_12
+
+ImageLabel_13.Parent = ScrollingFrame
+ImageLabel_13.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_13.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_13.Position = UDim2.new(0.0133286119, 0, 0.53075105, 0)
+ImageLabel_13.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_13.Image = "rbxassetid://10358226613"
+ImageLabel_13.ScaleType = Enum.ScaleType.Crop
+
+UICorner_24.Parent = ImageLabel_13
+
+ImageLabel_14.Parent = ScrollingFrame
+ImageLabel_14.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_14.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_14.Position = UDim2.new(0.254948735, 0, 0.53075105, 0)
+ImageLabel_14.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_14.Image = "rbxassetid://10358226613"
+ImageLabel_14.ScaleType = Enum.ScaleType.Crop
+
+UICorner_25.Parent = ImageLabel_14
+
+ImageLabel_15.Parent = ScrollingFrame
+ImageLabel_15.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_15.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_15.Position = UDim2.new(0.499362111, 0, 0.52943176, 0)
+ImageLabel_15.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_15.Image = "rbxassetid://10358226613"
+ImageLabel_15.ScaleType = Enum.ScaleType.Crop
+
+UICorner_26.Parent = ImageLabel_15
+
+ImageLabel_16.Parent = ScrollingFrame
+ImageLabel_16.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel_16.BorderColor3 = Color3.fromRGB(0, 93, 31)
+ImageLabel_16.Position = UDim2.new(0.738188982, 0, 0.53075105, 0)
+ImageLabel_16.Size = UDim2.new(0, 140, 0, 63)
+ImageLabel_16.Image = "rbxassetid://10358226613"
+ImageLabel_16.ScaleType = Enum.ScaleType.Crop
+
+UICorner_27.Parent = ImageLabel_16
+
+ExecuteOwlHub.Name = "Execute  Owl Hub"
+ExecuteOwlHub.Parent = ScrollingFrame
+ExecuteOwlHub.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteOwlHub.Position = UDim2.new(0.498607606, 0, 0.453212857, 0)
+ExecuteOwlHub.Size = UDim2.new(0, 140, 0, 37)
+ExecuteOwlHub.Font = Enum.Font.SourceSans
+ExecuteOwlHub.Text = "Owl Hub"
+ExecuteOwlHub.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteOwlHub.TextSize = 24.000
+ExecuteOwlHub.TextWrapped = true
+ExecuteOwlHub.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/CriShoux/OwlHub/master/OwlHub.txt"))()
+end)
+
+UICorner_28.Parent = ExecuteOwlHub
+
+ExecuteSorkyHub.Name = "Execute  Sorky Hub"
+ExecuteSorkyHub.Parent = ScrollingFrame
+ExecuteSorkyHub.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteSorkyHub.Position = UDim2.new(0.738831043, 0, 0.453212857, 0)
+ExecuteSorkyHub.Size = UDim2.new(0, 140, 0, 37)
+ExecuteSorkyHub.Font = Enum.Font.SourceSans
+ExecuteSorkyHub.Text = "Sorky Hub"
+ExecuteSorkyHub.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteSorkyHub.TextSize = 24.000
+ExecuteSorkyHub.TextWrapped = true
+ExecuteSorkyHub.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet(('https://pastebin.com/raw/MHx8q6xP'),true))()
+end)
+
+UICorner_29.Parent = ExecuteSorkyHub
+
+ExecuteMonkeHub.Name = "Execute  MonkeHub"
+ExecuteMonkeHub.Parent = ScrollingFrame
+ExecuteMonkeHub.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteMonkeHub.Position = UDim2.new(0.255590826, 0, 0.627355337, 0)
+ExecuteMonkeHub.Size = UDim2.new(0, 140, 0, 37)
+ExecuteMonkeHub.Font = Enum.Font.SourceSans
+ExecuteMonkeHub.Text = "MonkeHub"
+ExecuteMonkeHub.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteMonkeHub.TextSize = 24.000
+ExecuteMonkeHub.TextWrapped = true
+ExecuteMonkeHub.MouseButton1Down:connect(function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/KuriWasTaken/MonkeHub/main/Loader.lua"))()
+end)
+
+UICorner_30.Parent = ExecuteMonkeHub
+
+ExecuteStefan.Name = "Execute  Stefan"
+ExecuteStefan.Parent = ScrollingFrame
+ExecuteStefan.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteStefan.Position = UDim2.new(0.0139707327, 0, 0.627355337, 0)
+ExecuteStefan.Size = UDim2.new(0, 140, 0, 37)
+ExecuteStefan.Font = Enum.Font.SourceSans
+ExecuteStefan.Text = "Stefan"
+ExecuteStefan.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteStefan.TextSize = 24.000
+ExecuteStefan.TextWrapped = true
+ExecuteStefan.MouseButton1Down:Connect(function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/stefan-rblx/rblx-scripts/main/loader", true))()
+end)
+
+UICorner_31.Parent = ExecuteStefan
+
+ExecuteStefan_2.Name = "Execute  Stefan"
+ExecuteStefan_2.Parent = ScrollingFrame
+ExecuteStefan_2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteStefan_2.Position = UDim2.new(0.0111774206, 0, 0.627355337, 0)
+ExecuteStefan_2.Size = UDim2.new(0, 140, 0, 37)
+ExecuteStefan_2.Font = Enum.Font.SourceSans
+ExecuteStefan_2.Text = "Stefan"
+ExecuteStefan_2.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteStefan_2.TextSize = 24.000
+ExecuteStefan_2.TextWrapped = true
+ExecuteStefan.MouseButton1Down:Connect(function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/stefan-rblx/rblx-scripts/main/loader", true))()
+end)
+
+UICorner_32.Parent = ExecuteStefan_2
+
+ExecuteZephyrX.Name = "Execute  Zephyr X"
+ExecuteZephyrX.Parent = ScrollingFrame
+ExecuteZephyrX.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteZephyrX.Position = UDim2.new(0.501400888, 0, 0.627355337, 0)
+ExecuteZephyrX.Size = UDim2.new(0, 140, 0, 37)
+ExecuteZephyrX.Font = Enum.Font.SourceSans
+ExecuteZephyrX.Text = "Zephyr X"
+ExecuteZephyrX.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteZephyrX.TextSize = 24.000
+ExecuteZephyrX.TextWrapped = true
+ExecuteZephyrX.MouseButton1Down:Connect(function()
+	pcall(function() loadstring(game:HttpGet('https://raw.githubusercontent.com/ECLIPSEXHUB/ECLIPSE-X/main/ECLIPSE%20X.txt', true))() 
+	end)
+end)
+
+UICorner_33.Parent = ExecuteZephyrX
+
+ExecuteSirius.Name = "Execute  Sirius "
+ExecuteSirius.Parent = ScrollingFrame
+ExecuteSirius.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ExecuteSirius.Position = UDim2.new(0.737434387, 0, 0.627355337, 0)
+ExecuteSirius.Size = UDim2.new(0, 140, 0, 37)
+ExecuteSirius.Font = Enum.Font.SourceSans
+ExecuteSirius.Text = "Sirius"
+ExecuteSirius.TextColor3 = Color3.fromRGB(0, 93, 31)
+ExecuteSirius.TextSize = 24.000
+ExecuteSirius.TextWrapped = true
+ExecuteSirius.MouseButton1Down:Connect(function()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Sirius/request/Loader'))()
+end)
+
+UICorner_34.Parent = ExecuteSirius
+
+TextLabel_2.Parent = UniversalFrame
+TextLabel_2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TextLabel_2.BorderColor3 = Color3.fromRGB(27, 42, 53)
+TextLabel_2.Position = UDim2.new(-0.000855983992, 0, 0, 0)
+TextLabel_2.Size = UDim2.new(0, 77, 0, 41)
+TextLabel_2.Font = Enum.Font.SourceSans
+TextLabel_2.Text = "V1.0.1"
+TextLabel_2.TextColor3 = Color3.fromRGB(0, 93, 31)
+TextLabel_2.TextSize = 28.000
+
+UICorner_35.Parent = TextLabel_2
+
+Close.Name = "Close"
+Close.Parent = UniversalFrame
+Close.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Close.Position = UDim2.new(0.91967541, 0, -0.000390447851, 0)
+Close.Size = UDim2.new(0, 57, 0, 41)
+Close.Font = Enum.Font.SourceSans
+Close.Text = "X"
+Close.TextColor3 = Color3.fromRGB(0, 93, 31)
+Close.TextSize = 24.000
+Close.TextWrapped = true
+Close.MouseButton1Down:Connect(function()
+	UniversalFrame.Visible = false
+end)
+
+UICorner_36.Parent = Close
+
+Minimize.Name = "Minimize"
+Minimize.Parent = UniversalFrame
+Minimize.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Minimize.Position = UDim2.new(0.840066493, 0, -0.000390447851, 0)
+Minimize.Size = UDim2.new(0, 57, 0, 41)
+Minimize.Font = Enum.Font.SourceSans
+Minimize.Text = "-"
+Minimize.TextColor3 = Color3.fromRGB(0, 93, 31)
+Minimize.TextSize = 36.000
+Minimize.TextWrapped = true
+Minimize.MouseButton1Down:Connect(function()
+	UITOGGLERFrame.Visible = true
+	UniversalFrame.Visible = false
+end)
+
+UICorner_37.Parent = Minimize
+
+UITOGGLERFrame.Name = "UI TOGGLER Frame"
+UITOGGLERFrame.Parent = ScreenGui
+UITOGGLERFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+UITOGGLERFrame.Position = UDim2.new(0.504071712, 0, 0.0417827293, 0)
+UITOGGLERFrame.Size = UDim2.new(0, 80, 0, 53)
+UITOGGLERFrame.Active = true
+UITOGGLERFrame.Draggable = true
+
+UICorner_38.Parent = UITOGGLERFrame
+
+OpensTheFrame.Name = "Opens The Frame"
+OpensTheFrame.Parent = UITOGGLERFrame
+OpensTheFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+OpensTheFrame.Position = UDim2.new(-0.00416636467, 0, 0, 0)
+OpensTheFrame.Size = UDim2.new(0, 80, 0, 53)
+OpensTheFrame.Font = Enum.Font.SourceSans
+OpensTheFrame.Text = "Toggle ME"
+OpensTheFrame.TextColor3 = Color3.fromRGB(0, 100, 55)
+OpensTheFrame.TextSize = 14.000
+OpensTheFrame.MouseButton1Down:Connect(function()
+	UITOGGLERFrame.Visible = false
+	UniversalFrame.Visible = true
+end)
+
+UICorner_39.Parent = OpensTheFrame
