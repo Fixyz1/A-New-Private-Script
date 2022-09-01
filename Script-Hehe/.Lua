@@ -1,825 +1,2045 @@
-local ver = "V1.1"
+--[[
+    Magma Hub
+    © Commandcracker
 
-local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
+    https://github.com/Commandcracker/Magma-Hub
+]]
 
-local UserInputService = game:GetService("UserInputService")
+-- Services
+local UserInputService  = game:GetService("UserInputService")
+local VirtualUser       = game:GetService("VirtualUser")
+local Players           = game:GetService("Players")
+local RunService        = game:GetService("RunService")
+local HttpService       = game:GetService("HttpService")
+local TeleportService   = game:GetService("TeleportService")
+local Camera            = game:GetService("Workspace").CurrentCamera
+local TestService       = game:GetService("TestService")
 
-local tabs = {}
+-- Variables
+local LocalPlayer = Players.LocalPlayer
+local Mouse       = LocalPlayer:GetMouse()
 
-local lib = {}
+-- Anti Kick Hook
+if hookmetamethod ~= nil and getnamecallmethod ~= nil then
+    local OldNameCall = nil
 
-local defualt_tab = false
+    OldNameCall = hookmetamethod(game, "__namecall", function(Self, n, ...)
+        local NameCallMethod = getnamecallmethod()
 
-local function Tween(GuiObject, Dictionary)
-	local TweenService = game:GetService("TweenService")
-	local TweenBase = TweenService:Create(GuiObject, TweenInfo.new(0.1), Dictionary)
-	TweenBase:Play()
-	return TweenBase
+        if tostring(string.lower(NameCallMethod)) == "kick" then
+            if n == nil then
+                game.StarterGui:SetCore("SendNotification", {Title="Magma Hub"; Text="Kick prevented."; Duration=2;})
+                print("[Magma Hub] Kick prevented.")
+            else
+                game.StarterGui:SetCore("SendNotification", {Title="Magma Hub"; Text="Kick "..'"'.. n ..'"'.." prevented."; Duration=2;})
+                print("[Magma Hub] Kick "..'"'.. n ..'"'.." prevented.")
+            end
+            return nil
+        end
+
+        return OldNameCall(Self, n, ...)
+    end)
 end
 
-local function RoundBox(CornerRadius, ButtonOrNot)
-	local NewRoundBox = Instance.new(ButtonOrNot and "ImageButton" or "ImageLabel")
-	NewRoundBox.BackgroundTransparency = 1
-	NewRoundBox.Image = "rbxassetid://3570695787"
-	NewRoundBox.SliceCenter = Rect.new(100,100,100,100)
-	NewRoundBox.SliceScale = math.clamp((CornerRadius or 5) * 0.01, 0.01, 1)
-	NewRoundBox.ScaleType = Enum.ScaleType.Slice
-	NewRoundBox.ZIndex = 5
-	return NewRoundBox
-end
-
-local function GetXY(GuiObject)
-	local X, Y = mouse.X - GuiObject.AbsolutePosition.X, mouse.Y - GuiObject.AbsolutePosition.Y
-	local MaxX, MaxY = GuiObject.AbsoluteSize.X, GuiObject.AbsoluteSize.Y
-	X, Y = math.clamp(X, 0, MaxX), math.clamp(Y, 0, MaxY)
-	return X, Y, X/MaxX, Y/MaxY
-end
-
-lib.createWindow = function(title, name, draggable)
-	local window
-	local mainframe
-	local tabholder
-	local tabbuttonholder
-
-	local WindowLib = {}
-
-	window = Instance.new("ScreenGui")
-	window.Name = name
-	window.ResetOnSpawn = false
-
-	if game:GetService("RunService"):IsStudio() then
-		syn = false
-		window.Parent = player.PlayerGui
-	else
-		window.Parent = game.CoreGui
+-- Thrad Manager
+local function kill(thread: thread, f)
+	local env = getfenv(f)
+	function env:__index(k)
+		if type(env[k]) == "function" and coroutine.running() == thread then
+			return function()
+				coroutine.yield()
+			end
+		else
+			return env[k]
+		end
 	end
+	setfenv(f, setmetatable({}, env))
+	coroutine.resume(thread)
+end
 
-	if syn then
-		syn.protect_gui(window)
+local TM 	= {}
+TM.__index 	= TM
+
+function TM.new()
+	return setmetatable({
+		threads = {}
+	}, TM)
+end
+
+function TM:Add(Function)
+	local thread = coroutine.create(Function)
+	table.insert(self.threads, {thread, Function})
+	coroutine.resume(thread)
+end
+
+function TM:Cleanup()
+	for _,v in pairs(self.threads) do
+		kill(v[1], v[2])
 	end
+end
 
-	local NotificationList = Instance.new("Frame")
-	NotificationList.Name = "NotificationList"
-	NotificationList.Parent = window
-	NotificationList.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	NotificationList.BackgroundTransparency = 1.000
-	NotificationList.Position = UDim2.new(0.759147465, 0, 0.295608371, 0)
-	NotificationList.Size = UDim2.new(0.240573183, 0, 0.704264104, 0)
+Threads = TM.new()
 
-	local Notification = Instance.new("Frame")
-	Notification.Name = "Notification"
-	Notification.Parent = NotificationList
-	Notification.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
-	Notification.BackgroundTransparency = 1.000
-	Notification.Position = UDim2.new(0.264621258, 0, 0.8671875, 0)
-	Notification.Size = UDim2.new(0.735378683, 0, 0.1328125, 0)
-	Notification.Visible = false
+-- Better Local Player
+BLP = {}
 
+function BLP.Respawn()
+	local char = LocalPlayer.Character
+	if char:FindFirstChildOfClass("Humanoid") then char:FindFirstChildOfClass("Humanoid"):ChangeState(15) end
+	char:ClearAllChildren()
+	local newChar 	= Instance.new("Model")
+	newChar.Parent 	= workspace
+	LocalPlayer.Character = newChar
+	wait()
+	LocalPlayer.Character = char
+	newChar:Destroy()
+end
 
-	local NotifCorner = Instance.new("UICorner")
-	NotifCorner.CornerRadius = UDim.new(0, 4)
-	NotifCorner.Parent = Notification
-
-	local Top = Instance.new("Frame")
-	Top.Name = "Top"
-	Top.Parent = Notification
-	Top.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
-	Top.BackgroundTransparency = 1.000
-	Top.Size = UDim2.new(0.999999881, 0, 0.230000004, 0)
-
-	local TopCorner = Instance.new("UICorner")
-	TopCorner.CornerRadius = UDim.new(0, 4)
-	TopCorner.Parent = Top
-
-	local Title = Instance.new("TextLabel")
-	Title.Name = "Title"
-	Title.Parent = Top
-	Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	Title.BackgroundTransparency = 1.000
-	Title.Position = UDim2.new(0.0278746728, 0, 0, 0)
-	Title.Size = UDim2.new(0.921232879, 0, 1, 0)
-	Title.Font = Enum.Font.GothamSemibold
-	Title.Text = "Title"
-	Title.TextColor3 = Color3.fromRGB(61, 133, 222)
-	Title.TextSize = 14.000
-	Title.TextTransparency = 1.000
-	Title.TextXAlignment = Enum.TextXAlignment.Left
-
-	local Counter = Instance.new("TextLabel")
-	Counter.Name = "Counter"
-	Counter.Parent = Top
-	Counter.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	Counter.BackgroundTransparency = 1.000
-	Counter.Position = UDim2.new(0.914860964, 0, 0, 0)
-	Counter.Size = UDim2.new(0.0821917802, 0, 1, 0)
-	Counter.Font = Enum.Font.GothamSemibold
-	Counter.Text = "(5)"
-	Counter.TextColor3 = Color3.fromRGB(61, 133, 222)
-	Counter.TextSize = 14.000
-	Counter.TextTransparency = 1.000
-	Counter.TextXAlignment = Enum.TextXAlignment.Left
-
-	local Text = Instance.new("TextLabel")
-	Text.Name = "Text"
-	Text.Parent = Notification
-	Text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	Text.BackgroundTransparency = 1.000
-	Text.Position = UDim2.new(0.0278745648, 0, 0.304347545, 0)
-	Text.Size = UDim2.new(0.931506753, 0, 0.639999986, 0)
-	Text.Font = Enum.Font.GothamSemibold
-	Text.Text = "Text"
-	Text.TextColor3 = Color3.fromRGB(190, 190, 190)
-	Text.TextSize = 14.000
-	Text.TextTransparency = 1.000
-	Text.TextWrapped = true
-	Text.TextXAlignment = Enum.TextXAlignment.Left
-	Text.TextYAlignment = Enum.TextYAlignment.Top
-
-	local List = Instance.new("UIListLayout")
-	List.Parent = NotificationList
-	List.HorizontalAlignment = Enum.HorizontalAlignment.Right
-	List.SortOrder = Enum.SortOrder.LayoutOrder
-	List.VerticalAlignment = Enum.VerticalAlignment.Bottom
-
-	local ContainerFrame = Instance.new("Frame")
-	ContainerFrame.Name = "ContainerFrame"
-	ContainerFrame.Parent = window
-	ContainerFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-	ContainerFrame.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
-	ContainerFrame.BackgroundTransparency = 1.000
-	ContainerFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	ContainerFrame.Position = UDim2.new(0.499127448, 0, 0.499993384, 0)
-	ContainerFrame.Size = UDim2.new(0, 525, 0, 329)
-	ContainerFrame.ZIndex = 2
-
-	local MainFrame = Instance.new("Frame")
-	MainFrame.Name = "MainFrame"
-	MainFrame.Parent = ContainerFrame
-	MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-	MainFrame.BackgroundColor3 = Color3.fromRGB(47, 50, 53)
-	MainFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	MainFrame.Position = UDim2.new(0.499127448, 0, 0.499993384, 0)
-	MainFrame.Size = UDim2.new(0, 525, 0, 329)
-	MainFrame.ZIndex = 2
-
-	mainframe = MainFrame
-
-	local Close = Instance.new("ImageButton")
-
-	Close.Name = "Close"
-	Close.Parent = mainframe
-	Close.BackgroundTransparency = 1
-	Close.Image = "rbxassetid://3926307971"
-	Close.ImageRectOffset = Vector2.new(324,364)
-	Close.ImageRectSize = Vector2.new(36,36)
-	Close.Size = UDim2.new(0,16,0,16)
-	Close.Position = UDim2.new(0.956, 0, 0.018, 0)
-	Close.ZIndex = 5
-
-	Tween(Close, {Rotation = 135})
-
-	local UICorner = Instance.new("UICorner")
-	UICorner.CornerRadius = UDim.new(0, 4)
-	UICorner.Parent = MainFrame
-
-	local MenuBar = Instance.new("Frame")
-	MenuBar.Name = "MenuBar"
-	MenuBar.Parent = MainFrame
-	MenuBar.BackgroundColor3 = Color3.fromRGB(40, 43, 45)
-	MenuBar.Size = UDim2.new(0, 118, 0, 329)
-	MenuBar.ZIndex = 2
-
-	tabbuttonholder = MenuBar
-
-	local UICorner_2 = Instance.new("UICorner")
-	UICorner_2.CornerRadius = UDim.new(0, 4)
-	UICorner_2.Parent = MenuBar
-
-	local UIListLayout = Instance.new("UIListLayout")
-	UIListLayout.Parent = MenuBar
-	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	UIListLayout.Padding = UDim.new(0, 5)
-
-	local Title_2 = Instance.new("TextLabel")
-	Title_2.Name = "Title"
-	Title_2.Parent = MenuBar
-	Title_2.BackgroundTransparency = 1.000
-	Title_2.Position = UDim2.new(0.0909315199, 0, 0, 0)
-	Title_2.Size = UDim2.new(0.987628639, -20, 0.133877605, 0)
-	Title_2.ZIndex = 3
-	Title_2.Font = Enum.Font.GothamSemibold
-	Title_2.Text = "Test"
-	Title_2.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Title_2.TextSize = 22.000
-	Title_2.TextXAlignment = Enum.TextXAlignment.Left
-
-	local Display = Instance.new("Frame")
-	Display.Name = "Display"
-	Display.Parent = MainFrame
-	Display.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	Display.BackgroundTransparency = 1.000
-	Display.ClipsDescendants = true
-	Display.Position = UDim2.new(0.225, 0, 0.088, 0)
-	Display.Size = UDim2.new(0, 407, 0, 302)
-	Display.ZIndex = 2
-
-	tabholder = Display
-
-	local Watermark = Instance.new("TextLabel")
-
-	Watermark.Parent = mainframe
-	Watermark.Name = "Watermark"
-	Watermark.Text = "Aqua UI Library " .. tostring(ver)
-	Watermark.BackgroundTransparency = 1
-	Watermark.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Watermark.Position = UDim2.new(0, 0, 0.932, 0)
-	Watermark.Size = UDim2.new(0.2, 0, 0.008, 20)
-	Watermark.TextSize = 9
-	Watermark.ZIndex = 1000000000
-	Watermark.Font = Enum.Font.Gotham
-	Watermark.TextWrapped = true
-	
-	local CurrentTab = Instance.new("TextLabel")
-	CurrentTab.Name = "CurrentTab"
-	CurrentTab.Parent = MainFrame
-	CurrentTab.BackgroundTransparency = 1.000
-	CurrentTab.Position = UDim2.new(0.243312523, 0, 0, 0)
-	CurrentTab.Size = UDim2.new(0.750782788, -20, 0.0882848948, 0)
-	CurrentTab.ZIndex = 3
-	CurrentTab.Font = Enum.Font.GothamSemibold
-	CurrentTab.Text = "unloaded"
-	CurrentTab.TextColor3 = Color3.fromRGB(255, 255, 255)
-	CurrentTab.TextSize = 14.000
-	CurrentTab.TextXAlignment = Enum.TextXAlignment.Left
-
-	Close.MouseButton1Down:Connect(function()
-		window:Destroy()
+function BLP.Refresh()
+	local Human = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid", true)
+	local pos 	= Human and Human.RootPart and Human.RootPart.CFrame
+	local pos1 	= workspace.CurrentCamera.CFrame
+	BLP.Respawn()
+	task.spawn(function()
+		LocalPlayer.CharacterAdded:Wait():WaitForChild("Humanoid").RootPart.CFrame, workspace.CurrentCamera.CFrame = pos, wait() and pos1
 	end)
-
-	WindowLib.createTab = function(name)
-		local TabLib = {}
-
-
-		table.insert(tabs, name)
-		local tab = Instance.new("ScrollingFrame")
-		local tabbutton = Instance.new("TextButton")
-		local tabpadding = Instance.new("UIPadding")
-		local tablist = Instance.new("UIListLayout")
-
-		tab.Name = name
-		tab.Parent = tabholder
-		tab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		tab.BackgroundTransparency = 1.000
-		tab.ClipsDescendants = true
-		tab.Position = UDim2.new(-0.002, 0,-0.002, 0)
-		tab.Size = UDim2.new(0, 407, 0, 302)
-		tab.ZIndex = 2
-		tab.BottomImage = ""
-		tab.MidImage = ""
-		tab.TopImage = ""
-		tab.BorderSizePixel = 0
-		tab.CanvasSize = UDim2.new(0, 0, 100, 0)
-		tab.ScrollBarThickness = 0
-
-		tabpadding.Parent = tab
-		tabpadding.PaddingBottom = UDim.new(0, 5)
-		tabpadding.PaddingLeft = UDim.new(0, 5)
-		tabpadding.PaddingRight = UDim.new(0, 5)
-		tabpadding.PaddingTop = UDim.new(0, 5)
-
-		tablist.Padding = UDim.new(0, 5)
-		tablist.Parent = tab
-
-		tabbutton.Name = name
-		tabbutton.Parent = tabbuttonholder
-		tabbutton.BackgroundColor3 = Color3.fromRGB(29, 29, 29)
-		tabbutton.BackgroundTransparency = 1.000
-		tabbutton.BorderSizePixel = 0
-		tabbutton.Position = UDim2.new(0.105097599, 0, 0.0804777294, 0)
-		tabbutton.Size = UDim2.new(0, 88, 0, 23)
-		tabbutton.ZIndex = 2
-		tabbutton.AutoButtonColor = false
-		tabbutton.Font = Enum.Font.GothamSemibold
-		tabbutton.Text = name
-		tabbutton.TextColor3 = Color3.fromRGB(255, 255, 255)
-		tabbutton.TextSize = 15.000
-		tabbutton.TextXAlignment = Enum.TextXAlignment.Left
-
-		if not defualt_tab then
-			defualt_tab = tabbutton.Name
-			CurrentTab.Text = defualt_tab
-		else
-			tab.Visible = false
-		end
-
-		TabLib.AddButton = function(text, name, callback, parent)
-			if not parent then parent = tab end
-			local button = Instance.new("TextButton")
-			local buttonround = Instance.new("UICorner")
-			button.Name = name
-			button.Parent = parent
-			button.Text = text
-			button.BackgroundColor3 = Color3.fromRGB(71, 75, 80)
-			button.BorderSizePixel = 0
-			button.Size = UDim2.new(1, 0, 0, 25)
-			button.TextColor3 = Color3.new(1, 1, 1)
-			button.ZIndex = 4
-			button.Font = Enum.Font.Gotham
-			button.TextSize = 14
-
-			buttonround.Parent = button
-			buttonround.CornerRadius = UDim.new(0, 3)
-
-			button.MouseButton1Down:Connect(function()
-				callback()
-			end)
-
-			return button
-		end
-
-		TabLib.AddInput = function(pholdertext, text, name)
-			local InputLib = {}
-			local input = Instance.new("TextBox")
-			local inputround = Instance.new("UICorner")
-			input.Name = name
-			input.Text = text
-			input.Parent = tab
-			input.PlaceholderText = pholdertext
-			input.BackgroundColor3 = Color3.fromRGB(71, 75, 80)
-			input.BorderSizePixel = 0
-			input.Size = UDim2.new(1, 0, 0, 25)
-			input.TextColor3 = Color3.new(1, 1, 1)
-			input.ZIndex = 4
-			input.Font = Enum.Font.Gotham
-			input.TextSize = 14
-
-			inputround.Parent = input
-			inputround.CornerRadius = UDim.new(0, 3)
-
-			InputLib.GetInput = function()
-				return input.Text
-			end
-
-			InputLib.ClearInput = function()
-				input.Text = ""
-			end
-
-			return InputLib
-		end
-
-		TabLib.AddLabel = function(text, name)
-			local label = Instance.new("TextLabel")
-			local labelround = Instance.new("UICorner")
-			label.Name = name
-			label.Parent = tab
-			label.Text = text
-			label.BackgroundColor3 = Color3.fromRGB(71, 75, 80)
-			label.BorderSizePixel = 0
-			label.Size = UDim2.new(1, 0, 0, 25)
-			label.TextColor3 = Color3.new(1, 1, 1)
-			label.ZIndex = 4
-			label.Font = Enum.Font.Gotham
-			label.TextSize = 14
-
-			labelround.Parent = label
-			labelround.CornerRadius = UDim.new(0, 3)
-		end
-
-		TabLib.AddToggle = function(text, name, defualt, callback)
-			local toggled = defualt
-
-			local toggleenabledcolour = Color3.fromRGB(73, 255, 85)
-			local toggledisabledcolour = Color3.fromRGB(255, 160, 160)
-
-			local togglebutton = Instance.new("TextButton")
-			local togglebuttonround = Instance.new("UICorner")
-			local toggleindicator = Instance.new("Frame")
-			local toggleindicatorround = Instance.new("UICorner")
-
-			togglebutton.Name = name
-			togglebutton.Text = text
-			togglebutton.Parent = tab
-			togglebutton.BackgroundColor3 = Color3.fromRGB(71, 75, 80)
-			togglebutton.BorderSizePixel = 0
-			togglebutton.Size = UDim2.new(1, 0, 0, 25)
-			togglebutton.TextColor3 = Color3.new(1, 1, 1)
-			togglebutton.ZIndex = 4
-			togglebutton.Font = Enum.Font.Gotham
-			togglebutton.TextSize = 14
-
-			togglebuttonround.Parent = togglebutton
-			togglebuttonround.CornerRadius = UDim.new(0, 3)
-
-			toggleindicator.Name = "Indicator"
-			toggleindicator.Parent = togglebutton
-			toggleindicator.BorderSizePixel = 0
-			toggleindicator.Size = UDim2.new(0.03, 2, 0.6, 0)
-			toggleindicator.Position = UDim2.new(1.01, -22, 0.2, 0)
-			toggleindicator.ZIndex = 5
-
-			if toggled == false then
-				togglebutton.Text = text .. " (Disabled)"
-				toggleindicator.BackgroundColor3 = toggledisabledcolour
-			else
-				togglebutton.Text = text .. " (Enabled)"
-				toggleindicator.BackgroundColor3 = toggleenabledcolour
-			end
-
-			toggleindicatorround.Parent = toggleindicator
-			toggleindicatorround.CornerRadius = UDim.new(0, 3)
-
-			togglebutton.MouseButton1Down:Connect(function()
-				if toggled == false then
-					toggled = true
-					toggleindicator.BackgroundColor3 = toggleenabledcolour
-					togglebutton.Text = text .. " (Enabled)"
-				else
-					toggled = false
-					toggleindicator.BackgroundColor3 = toggledisabledcolour
-					togglebutton.Text = text .. " (Disabled)"
-				end
-				callback(toggled)
-			end)
-		end
-
-		TabLib.AddDropdown = function(text, name, dropdownarray, callback)
-			local selected = nil
-			local isdown = true
-
-			local container = Instance.new("Frame")
-			local dropdownbutton = Instance.new("TextLabel")
-			local dropdownbuttonround = Instance.new("UICorner")
-			local dropdownframe = Instance.new("Frame")
-			local dropdownlist = Instance.new("UIListLayout")
-			local dropdownexpander = Instance.new("ImageButton")
-
-			container.Parent = tab
-			container.Name = name
-			container.Size = UDim2.new(1,0,0,25)
-			container.BackgroundTransparency = 1
-
-			dropdownbutton.Name = "Dropdown"
-			dropdownbutton.Text = text
-			dropdownbutton.Parent = container
-			dropdownbutton.BackgroundColor3 = Color3.fromRGB(71, 75, 80)
-			dropdownbutton.BorderSizePixel = 0
-			dropdownbutton.Size = UDim2.new(1, 0, 0, 25)
-			dropdownbutton.TextColor3 = Color3.new(1, 1, 1)
-			dropdownbutton.ZIndex = 4
-			dropdownbutton.Font = Enum.Font.Gotham
-			dropdownbutton.TextSize = 14
-
-			dropdownbuttonround.Parent = dropdownbutton
-			dropdownbuttonround.CornerRadius = UDim.new(0, 3)
-			
-			dropdownframe.Name = "Options"
-			dropdownframe.Position = UDim2.new(0,0,0,30)
-			dropdownframe.BackgroundTransparency = 1
-			dropdownframe.Size = UDim2.new(1,0,0.208,#dropdownarray*40)
-			dropdownframe.Parent = dropdownbutton
-
-			dropdownlist.Parent = dropdownframe
-			dropdownlist.Padding = UDim.new(0,4)
-
-			dropdownexpander.Name = "DropdownIcon"
-			dropdownexpander.Parent = dropdownbutton
-			dropdownexpander.BackgroundTransparency = 1
-			dropdownexpander.Image = "rbxassetid://3926307971"
-			dropdownexpander.ImageRectOffset = Vector2.new(324,364)
-			dropdownexpander.ImageRectSize = Vector2.new(36,36)
-			dropdownexpander.Size = UDim2.new(0,16,0,16)
-			dropdownexpander.Position = UDim2.new(0.997, -18, 0.08, 2)
-			dropdownexpander.ZIndex = 5
-			
-			for optionlist,option in next, dropdownarray do
-				local button = TabLib.AddButton(option, "DropdownOption", function()
-					selected = option
-					callback(option)
-					dropdownbutton.Text = text..": "..option
-				end, dropdownframe)
-				button.Visible = false
-				button.ZIndex = 5
-				if selected == nil then
-					selected = option
-					dropdownbutton.Text = text..": "..option
-				end
-			end
-			
-			local spacer = Instance.new("TextLabel")
-			spacer.Name = "Spacer"
-			spacer.Text = ""
-			spacer.Size = UDim2.new(1, 0, -0.104, 25)
-			spacer.Parent = dropdownframe
-			spacer.BackgroundTransparency = 1
-
-			dropdownexpander.MouseButton1Down:Connect(function()
-				Tween(dropdownexpander, {Rotation = isdown and 135 or 0})
-				Tween(container, {Size = isdown and UDim2.new(1,0,0,25+(#dropdownarray+1*27)) or UDim2.new(1,0,0,25)})
-				for _,child in pairs(dropdownframe:GetChildren()) do
-					if child.Name == "DropdownOption" or child.Name == "Spacer" then
-						if isdown == true then
-							child.Visible = true
-						else
-							child.Visible = false
-						end
-					end
-				end
-				isdown = not isdown
-			end)
-		end
-
-		TabLib.AddSlider = function(text, name, config, callback)
-			local Configuration = config
-			local Minimum = Configuration["min"]
-			local Maximum = Configuration["max"]
-			local Default = Configuration["defualt"]
-
-			if Minimum > Maximum then
-				local StoreValue = Minimum
-				Minimum = Maximum
-				Maximum = StoreValue
-			end
-
-			Default = math.clamp(Default, Minimum, Maximum)
-
-			local DefaultScale = Default/Maximum
-
-			local container = Instance.new("Frame")
-			container.Parent = tab
-			container.Name = name
-			container.Size = UDim2.new(1,0,0,25)
-			container.BackgroundTransparency = 1
-
-			local SliderForeground = RoundBox(1)
-			SliderForeground.Name = "SliderForeground"
-			SliderForeground.ImageColor3 = Color3.fromRGB(71, 75, 80)
-			SliderForeground.Size = UDim2.new(1,0,1,0)
-			SliderForeground.Parent = container
-			SliderForeground.BorderSizePixel = 0
-
-			local SliderButton = Instance.new("TextButton")
-			SliderButton.Text = text..": "..Default
-			SliderButton.Size = UDim2.new(1,0,1,0)
-			SliderButton.ZIndex = 6
-			SliderButton.Parent = SliderForeground
-			SliderButton.TextColor3 = Color3.new(1, 1, 1)
-			SliderButton.ZIndex = 6
-			SliderButton.Font = Enum.Font.Gotham
-			SliderButton.TextSize = 14
-			SliderButton.BorderSizePixel = 0
-			SliderButton.BackgroundTransparency = 1
-
-			local SliderFill = RoundBox(5)
-			SliderFill.Size = UDim2.new(DefaultScale,0,1,0)
-			SliderFill.ImageColor3 = Color3.fromRGB(54, 232, 96)
-			SliderFill.ZIndex = 5
-			SliderFill.ImageTransparency = 0.7
-			SliderFill.Parent = SliderButton
-			SliderFill.BorderSizePixel = 0
-
-			SliderButton.MouseButton1Down:Connect(function()
-				Tween(SliderFill, {ImageTransparency = 0.5})
-				local X, Y, XScale, YScale = GetXY(SliderButton)
-				local Value = math.floor(Minimum + ((Maximum - Minimum) * XScale))
-				callback(Value)
-				SliderButton.Text = text..": "..tostring(Value)
-				local TargetSize = UDim2.new(XScale,0,1,0)
-				Tween(SliderFill, {Size = TargetSize})
-				local SliderMove, SliderKill
-				SliderMove = mouse.Move:Connect(function()
-					Tween(SliderFill, {ImageTransparency = 0.5})
-					local X, Y, XScale, YScale = GetXY(SliderButton)
-					local Value = math.floor(Minimum + ((Maximum - Minimum) * XScale))
-					callback(Value)
-					SliderButton.Text = text..": "..tostring(Value)
-					local TargetSize = UDim2.new(XScale,0,1,0)
-					Tween(SliderFill, {Size = TargetSize})
-				end)
-				SliderKill = UserInputService.InputEnded:Connect(function(UserInput)
-					if UserInput.UserInputType == Enum.UserInputType.MouseButton1 then
-						Tween(SliderFill, {ImageTransparency = 0.7})
-						SliderMove:Disconnect()
-						SliderKill:Disconnect()
-					end
-				end)
-			end)
-		end
-
-		TabLib.RemoveInstance = function(name)
-			if tab:FindFirstChild(name) then
-				tab[name]:Destroy()
-			else
-				warn("Could not find instance")
-				return
-			end
-		end
-
-		return TabLib
-	end
-
-	WindowLib.deleteTab = function(name)
-		if table.find(tabs, name) then
-			table.remove(tabs, tabs[name])
-			local tab = tabholder:WaitForChild(name)
-			local tabbutton = tabbuttonholder:WaitForChild(name)
-			tab:Destroy()
-			tabbutton:Destroy()
-		else
-			warn("Tab not found")
-			return
-		end
-	end
-
-	local function TabHandle()
-		local newscript = Instance.new('LocalScript', tabbuttonholder)
-		newscript.Name = "Tab_Handler"
-
-		wait(0.1)
-		local tweenservice = game:GetService("TweenService")
-		local info = TweenInfo.new(.8, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, 0)
-		local tab = defualt_tab
-		local unselected = {
-			TextColor3 = Color3.fromRGB(190, 190, 190)
-		}
-		local selected = {
-			TextColor3 = Color3.fromRGB(61, 133, 222)
-		}
-		local hover = {
-			TextColor3 = Color3.fromRGB(235, 235, 235)
-		}
-		tweenservice:Create(tabbuttonholder[tab], info, selected):Play()
-		local deb = false
-		for i,v in pairs(tabbuttonholder:GetChildren())do
-			if v:IsA("TextButton")then
-				v.MouseEnter:Connect(function()
-					if tab ~= v.Name then
-						tweenservice:Create(v, info, hover):Play()
-					end
-				end)
-				v.MouseLeave:Connect(function()
-					if tab ~= v.Name then
-						tweenservice:Create(v, info, unselected):Play()
-					end
-				end)
-				if true then
-					v.MouseButton1Down:Connect(function()
-						if not deb then
-							deb = true
-							if tab ~= nil then
-								tabholder[tab]:TweenSize(UDim2.new(0, 0, 0, 300), "Out", "Quint", .4, false)
-								tweenservice:Create(tabbuttonholder[tab], info, unselected):Play()
-								wait(.4)
-								tabholder[tab].Visible = false
-							end
-							tab = v.Name
-							CurrentTab.Text = v.Name
-							tabholder[tab].Visible = true
-							tweenservice:Create(tabbuttonholder[tab], info, selected):Play()
-							tabholder[tab]:TweenSize(UDim2.new(0, 421,0, 300), "Out", "Quint", .4, false)
-							wait(.3)
-							deb = false
-						end
-					end)
-				else
-					v.MouseButton1Down:Connect(function()
-						tweenservice:Create(v, info, selected):Play()
-						wait(.5)
-						tweenservice:Create(v, info, unselected):Play()
-					end)
-				end
-			end
-		end
-	end
-	coroutine.wrap(TabHandle)()
-
-	local function DragScript()
-		local newscript = Instance.new('LocalScript', mainframe)
-		newscript.Name = "Drag"
-
-		local uis = game:GetService('UserInputService')
-		local frame = newscript.Parent
-		local toggle
-		local speed = 0.15
-		local drag
-		local pos
-		frame.InputBegan:Connect(function(input)
-			if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
-				toggle = true
-				drag = input.Position
-				pos = frame.Position
-				input.Changed:Connect(function()
-					if input.UserInputState == Enum.UserInputState.End then
-						toggle = false
-					end
-				end)
-			end
-		end)
-		uis.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-				if toggle then
-					local delta = input.Position - drag
-					local position = UDim2.new(pos.X.Scale, pos.X.Offset + delta.X,
-						pos.Y.Scale, pos.Y.Offset + delta.Y)
-					game:GetService('TweenService'):Create(frame, TweenInfo.new(speed), {Position = position}):Play()
-				end
-			end
-		end)
-	end
-
-	WindowLib.HighlightText = function(v)
-		local tweenservice = game:GetService("TweenService")
-		local info = TweenInfo.new(.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, 0)
-		local unselected = {
-			TextColor3 = Color3.fromRGB(190, 190, 190)
-		}
-		local hover = {
-			TextColor3 = Color3.fromRGB(235, 235, 235)
-		}
-		v.MouseEnter:Connect(function()
-			tweenservice:Create(v, info, hover):Play()
-		end)
-		v.MouseLeave:Connect(function()
-			tweenservice:Create(v, info, unselected):Play()
-		end)	
-	end
-
-	WindowLib.BackgroundFadeOut = function(v)
-		local tweenservice = game:GetService("TweenService")
-		local info = TweenInfo.new(.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, 0)
-		tweenservice:Create(v, info, {BackgroundTransparency = 1}):Play()
-	end
-	WindowLib.BackgroundFadeIn = function(v)
-		local tweenservice = game:GetService("TweenService")
-		local info = TweenInfo.new(.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, 0)
-		tweenservice:Create(v, info, {BackgroundTransparency = 0}):Play()
-	end
-	WindowLib.TextFadeOut = function(v)
-		local tweenservice = game:GetService("TweenService")
-		local info = TweenInfo.new(.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, 0)
-		tweenservice:Create(v, info, {TextTransparency = 1}):Play()
-	end
-	WindowLib.TextFadeIn = function(v)
-		local tweenservice = game:GetService("TweenService")
-		local info = TweenInfo.new(.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, 0)
-		tweenservice:Create(v, info, {TextTransparency = 0}):Play()
-	end
-
-	WindowLib.Notification = function(title, text, duration)
-		local card = window.NotificationList.Notification:Clone()
-		card.Text.Text = text
-		card.Top.Title.Text = title
-		card.Parent = window.NotificationList
-		card.Visible = true
-		WindowLib.HighlightText(card.Text)
-		WindowLib.BackgroundFadeIn(card)
-		WindowLib.BackgroundFadeIn(card.Top)
-		WindowLib.TextFadeIn(card.Text)
-		WindowLib.TextFadeIn(card.Top.Title)
-		WindowLib.TextFadeIn(card.Top.Counter)
-		if duration == nil then
-			card.Top.Counter.Text = "(5)"
-			for i = 5,0,-1 do
-				card.Top.Counter.Text = "(" .. i .. ")"
-				wait(1)
-			end
-			WindowLib.BackgroundFadeOut(card)
-			WindowLib.BackgroundFadeOut(card.Top)
-			WindowLib.TextFadeOut(card.Text)
-			WindowLib.TextFadeOut(card.Top.Title)
-			WindowLib.TextFadeOut(card.Top.Counter)
-			wait(.4)
-			card:Destroy()
-		else
-			card.Top.Counter.Text = "(" .. duration .. ")"
-			for i = duration,0,-1 do
-				card.Top.Counter.Text = "(" .. i .. ")"
-				wait(1)
-			end
-			WindowLib.BackgroundFadeOut(card)
-			WindowLib.BackgroundFadeOut(card.Top)
-			WindowLib.TextFadeOut(card.Text)
-			WindowLib.TextFadeOut(card.Top.Title)
-			WindowLib.TextFadeOut(card.Top.Counter)
-			wait(.4)
-			card:Destroy()
-		end
-	end
-
-	if not draggable then 
-		draggable = false
-	elseif draggable == true then
-		coroutine.wrap(DragScript)()
-	end
-
-
-	return WindowLib
 end
 
-lib.deleteWindow = function(name)
-	local ui = player.PlayerGui:WaitForChild(name)
-	ui:Destroy()
+function BLP.Teleport(x: number | Vector3 | CFrame, y: number | Vector3, z: number, ...: number)
+	if typeof(x) == "CFrame" then
+		LocalPlayer.Character.HumanoidRootPart.CFrame = x
+	elseif typeof(x) == "Vector3" then
+		if typeof(y) == "Vector3" then
+			LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(x, y)
+		else
+			LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(x)
+		end
+	else
+		LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(x, y, z, ...)
+	end
 end
 
-return lib
+-- Better Table
+Btable = {}
+
+function Btable.Reverse(Table: table)
+	local reversedTable = {}
+	local itemCount = #Table
+	for k, v in ipairs(Table) do
+		reversedTable[itemCount + 1 - k] = v
+	end
+	return reversedTable
+end
+
+function Btable.Contains(Table: table, Item)
+	for _, value in pairs(Table) do
+		if value == Item then return true end
+	end
+	return false
+end
+
+function Btable.Print(Table: table)
+    local function getPointer(...)
+        return string.split(tostring(...), " ")[2]
+    end
+
+    local function TableToString(Table: table, space: number)
+        local out   = "{\n"
+
+        if space == nil then
+            space = 1
+        end
+
+        for key,value in pairs(Table) do
+            local keyString
+            keyString = "['"..tostring(key).."']"
+    
+            local valueString
+            if type(value) == "function" then
+                valueString = "'".."function_"..getPointer(value).."'"
+            elseif type(value) == "string" then
+                valueString = "'"..tostring(value).."'"
+            elseif type(value) == "table" then
+                valueString = TableToString(value, space+1)
+            else
+                valueString = tostring(value)
+            end
+
+            for _=1,space*4 do
+                out=out.." "
+            end
+
+            out=out..keyString.." = "..valueString..',\n'
+        end
+        for _=1,(space-1)*4 do
+            out=out.." "
+        end
+        return out.."}"
+    end
+
+    local out = "local table_"..getPointer(Table).." = "..TableToString(Table).."\n"
+    if rconsoleclear ~= nil then rconsoleclear() end
+    if rconsoleprint ~= nil then
+        rconsoleprint(out)
+    else
+        print(out)
+    end
+end
+
+-- UI util
+local UIutil = {}
+
+function UIutil:DraggingEnabled(frame, parent)
+    parent = parent or frame
+
+    local dragging = false
+    local dragInput, mousePos, framePos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            mousePos = input.Position
+            framePos = parent.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta     = input.Position - mousePos
+            parent.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- Magma UI
+local MagmaUI = {}
+local Page    = {}
+
+MagmaUI.__index  = MagmaUI
+Page.__index     = Page
+
+function MagmaUI.new()
+    local GUI
+    if pcall(function()return game.CoreGui.Name end) then
+        GUI = Instance.new("ScreenGui", game.CoreGui)
+    else
+        GUI = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+    end
+
+    GUI.ResetOnSpawn = false
+    GUI.AutoLocalize = false
+    GUI.DisplayOrder = 999999999
+
+    local MainFrame             = Instance.new("Frame", GUI)
+    MainFrame.BackgroundColor3  = Color3.fromRGB(24, 24, 24)
+    MainFrame.Size              = UDim2.new(0, 500, 0, 320)
+    MainFrame.Position          = UDim2.new(0.5, -250, 0, -356)
+    MainFrame.BorderSizePixel   = 0
+
+    local RGBBar                = Instance.new("Frame", MainFrame)
+    RGBBar.BorderSizePixel      = 0
+    RGBBar.Size                 = UDim2.new(1, 0, 0, 4)
+    RGBBar.BackgroundColor3     = Color3.fromRGB(255, 78, 1)
+    RGBBar.ZIndex               = 2
+
+    --[[
+    Threads:Add(function()
+        local function zigzag(X) return math.acos(math.cos(X*math.pi))/math.pi end
+        local counter = 0
+
+        while wait(.1) do
+            RGBBar.BackgroundColor3 = Color3.fromHSV(zigzag(counter),1,1)
+            counter = counter + .01
+        end
+    end)
+    ]]
+
+    local TopBar            = Instance.new("Frame", MainFrame)
+    TopBar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    TopBar.Size             = UDim2.new(1,0,0,35)
+    TopBar.BorderSizePixel  = 0
+
+    local Title                     = Instance.new("TextLabel", TopBar)
+    Title.Size                      = UDim2.new(0.5, 0, 1, 0)
+    Title.Position                  = UDim2.new(0, 10, 0, 0)
+    Title.Font                      = Enum.Font.GothamBold
+    Title.Text                      = "Magma Hub"
+    Title.TextSize                  = 14
+    Title.TextXAlignment            = Enum.TextXAlignment.Left
+    Title.BackgroundTransparency    = 1
+    Title.TextColor3                = Color3.fromRGB(255, 255, 255)
+
+    local ExitButton                    = Instance.new("TextButton", TopBar)
+    ExitButton.Text                     = 'X'
+    ExitButton.BorderSizePixel          = 0
+    ExitButton.Size                     = UDim2.new(0, 35, 0, 35)
+    ExitButton.Position                 = UDim2.new(1, -35, 0, 0)
+    ExitButton.BackgroundColor3         = Color3.fromRGB(10, 10, 10)
+    ExitButton.TextColor3               = Color3.fromRGB(255, 255, 255)
+    ExitButton.Font                     = Enum.Font.GothamBold
+    ExitButton.TextSize                 = 14
+    ExitButton.MouseButton1Click:Connect(function()
+        MainFrame:TweenPosition(UDim2.new(MainFrame.Position.X.Scale,MainFrame.Position.X.Offset,1,0), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 1)
+        wait(1)
+        GUI:Destroy()
+        warn('[Magma Hub] Terminating Threads (ignore errors like "attempt to call a nil value")')
+        Threads:Cleanup()
+        script:Destroy()
+    end)
+
+    --[[
+    local MinimizeButton                    = Instance.new("TextButton", TopBar)
+    MinimizeButton.Text                     = "─"
+    MinimizeButton.BorderSizePixel          = 0
+    MinimizeButton.Size                     = UDim2.new(0,35,0,35)
+    MinimizeButton.Position                 = UDim2.new(1, -70, 0, 0)
+    MinimizeButton.BackgroundColor3         = Color3.fromRGB(10, 10, 10)
+    MinimizeButton.TextColor3               = Color3.fromRGB(255, 255, 255)
+    MinimizeButton.Font                     = Enum.Font.GothamBold
+    MinimizeButton.TextSize                 = 14
+    ]]
+
+    local PageFrame                     = Instance.new("ScrollingFrame", MainFrame)
+    PageFrame.Size                      = UDim2.new(0, 100, 1, -35)
+    PageFrame.Position                  = UDim2.new(0, 0, 0, 35)
+    PageFrame.BorderSizePixel           = 0
+    PageFrame.ScrollBarThickness        = 5
+    PageFrame.BackgroundColor3          = Color3.fromRGB(14, 14, 14)
+    PageFrame.ScrollBarImageColor3      = Color3.fromRGB(4, 4, 4)
+    PageFrame.AutomaticCanvasSize       = Enum.AutomaticSize.Y
+
+    local PageFrame_UIListLayout    = Instance.new("UIListLayout", PageFrame)
+    PageFrame_UIListLayout.Padding  = UDim.new(0, 5)
+
+    return setmetatable({
+        MainFrame = MainFrame,
+        PageFrame = PageFrame
+    }, MagmaUI)
+end
+
+function Page.new(lib, title: string)
+    local ModuleList                    = Instance.new("ScrollingFrame", lib.MainFrame)
+    ModuleList.Size                     = UDim2.new(1, -105, 1, -40)
+    ModuleList.Position                 = UDim2.new(0, 105, 0, 40)
+    ModuleList.BorderSizePixel          = 0
+    ModuleList.ScrollBarThickness       = 5
+    ModuleList.BackgroundTransparency   = 1
+    ModuleList.ScrollBarImageColor3     = Color3.fromRGB(4, 4, 4)
+    ModuleList.Visible                  = false
+    ModuleList.AutomaticCanvasSize      = Enum.AutomaticSize.Y
+
+    local ModuleList_UIListLayout      = Instance.new("UIListLayout", ModuleList)
+    ModuleList_UIListLayout.Padding    = UDim.new(0, 5)
+
+    local Button                = Instance.new("TextButton", lib.PageFrame)
+    Button.Size                 = UDim2.new(1, 0, 0, 35)
+    Button.Font                 = Enum.Font.Gotham
+    Button.Text                 = title
+    Button.TextSize             = 14
+    Button.TextColor3           = Color3.fromRGB(255, 255, 255)
+    Button.TextWrapped          = true
+    Button.BackgroundColor3     = Color3.fromRGB(14, 14, 14)
+    Button.BorderSizePixel      = 0
+    Button.TextTransparency     = 0.65
+
+    return setmetatable({
+        lib         = lib,
+        ModuleList  = ModuleList,
+        Button      = Button
+    }, Page)
+end
+
+function Page:Hide()
+    self.ModuleList.Visible         = false
+    self.Button.Font                = Enum.Font.Gotham
+    self.Button.TextTransparency    = 0.65
+end
+
+function Page:Show()
+    if self.lib.CurrentPage ~= nil then
+        self.lib.CurrentPage:Hide()
+    end
+
+    self.ModuleList.Visible         = true
+    self.lib.CurrentPage            = self
+    self.Button.Font                = Enum.Font.GothamSemibold
+    self.Button.TextTransparency    = 0
+end
+
+function Page:addButton(title: string, callback)
+    local Button = {}
+
+    Button.Frame                    = Instance.new("Frame", self.ModuleList)
+    Button.Frame.BorderSizePixel    = 0
+    Button.Frame.BackgroundColor3   = Color3.fromRGB(14, 14, 14)
+    Button.Frame.Size               = UDim2.new(1, -10, 0, 30)
+
+    Button.TextLabel                            = Instance.new("TextLabel", Button.Frame)
+    Button.TextLabel.TextColor3                 = Color3.new(1,1,1)
+    Button.TextLabel.Text                       = title
+    Button.TextLabel.TextWrapped                = true
+    Button.TextLabel.Font                       = Enum.Font.Gotham
+    Button.TextLabel.BackgroundTransparency     = 1
+    Button.TextLabel.Position                   = UDim2.new(0.02, 0, 0, 0)
+    Button.TextLabel.TextXAlignment             = Enum.TextXAlignment.Left
+    Button.TextLabel.Size                       = UDim2.new(0, 313, 1, 0)
+    Button.TextLabel.TextSize                   = 12
+
+    Button.Button                   = Instance.new("TextButton", Button.Frame)
+    Button.Button.TextColor3        = Color3.new(1,1,1)
+    Button.Button.Text              = "Run"
+    Button.Button.Font              = Enum.Font.Gotham
+    Button.Button.Position          = UDim2.new(0.89, 0, 0.25, -2)
+    Button.Button.TextSize          = 12
+    Button.Button.Size              = UDim2.new(0, 35, 1, -10)
+    Button.Button.BorderSizePixel   = 0
+    Button.Button.BackgroundColor3  = Color3.fromRGB(20, 20, 20)
+
+    function Button:connect(callback)
+        Button.Button.MouseButton1Click:Connect(callback)
+    end
+
+    if callback then
+        Button.Button.MouseButton1Click:Connect(callback)
+    end
+
+    return Button
+end
+
+function Page:addToggle(title: string, EnableFunction, DisableFunction)
+    local Button        = self:addButton(title)
+    Button.connect      = nil
+    Button.Button.Text  = "Off"
+
+    local Toggel = false
+
+    Button.Button.MouseButton1Click:Connect(function()
+        if Toggel then
+            Toggel = false
+            Button.Button.Text = "Off"
+            if DisableFunction ~= nil then
+                DisableFunction()
+            end
+        else
+            Toggel = true
+            Button.Button.Text = "On"
+            if EnableFunction ~= nil then
+                EnableFunction()
+            end
+        end
+    end)
+
+    function Button:IsEnabeld()
+        return Toggel
+    end
+
+    function Button:SetEnableFunction(Function)
+        EnableFunction = Function
+    end
+
+    function Button:SetDisableFunction(Function)
+        DisableFunction = Function
+    end
+
+    return Button
+end
+
+function Page:addInput(title: string, Function)
+    local Button = self:addButton(title)
+
+    Button.TextLabel.Size = UDim2.new(0, 231, 1, 0)
+
+    Button.TextBox                     = Instance.new("TextBox", Button.Frame)
+    Button.TextBox.TextColor3          = Color3.new(1,1,1)
+    Button.TextBox.Text                = ""
+    Button.TextBox.Font                = Enum.Font.Gotham
+    Button.TextBox.Position            = UDim2.new(1, -125, 0.25, -2)
+    Button.TextBox.Size                = UDim2.new(0, 75, 1, -10)
+    Button.TextBox.TextSize            = 12
+    Button.TextBox.BorderSizePixel     = 0
+    Button.TextBox.BackgroundColor3    = Color3.fromRGB(20, 20, 20)
+
+    Button.Button.MouseButton1Click:Connect(function()
+        if Function ~= nil then
+            Function(Button.TextBox.Text)
+        end
+    end)
+
+    return Button
+end
+
+function MagmaUI:addPage(title: string)
+    local page = Page.new(self,title)
+    page.Button.MouseButton1Click:Connect(function()
+        page:Show()
+    end)
+    return page
+end
+
+function MagmaUI:load()
+    UIutil:DraggingEnabled(self.MainFrame)
+    self.MainFrame:TweenPosition(UDim2.new(0.5, -250, 0.5, -196), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 1)
+end
+
+function MagmaUI:Notify(text: string, mode: number)
+    if mode == nil or mode == 0 then
+        print("[Magma Hub] "..text)
+    elseif mode == 1 then
+        warn("[Magma Hub] "..text)
+    end
+    game.StarterGui:SetCore("SendNotification",{
+        Title="Magma Hub",
+        Text=text,
+        Duration=2
+    })
+end
+
+-- Init
+MagmaHub = MagmaUI.new()
+
+-- Local Player Page
+local LocalPlayerPage = MagmaHub:addPage("Local Player")
+LocalPlayerPage:Show()
+
+-- WalkSpeed
+LocalPlayerPage:addInput("WalkSpeed", function(input)
+    LocalPlayer.Character:WaitForChild("Humanoid").WalkSpeed = input
+end)
+
+-- JumpPower
+LocalPlayerPage:addInput("JumpPower", function(input)
+    local Humanoid          = LocalPlayer.Character:WaitForChild("Humanoid")
+    Humanoid.UseJumpPower   = true
+    Humanoid.JumpPower      = input
+end)
+
+-- Teleport To Player
+LocalPlayerPage:addInput("Teleport To Player", function(input)
+    for _,player in pairs(Players:GetPlayers()) do
+        if input == string.sub(player.Name,1,#input) then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0, -1)
+        end
+    end
+end)
+
+-- Fullbright
+LocalPlayerPage:addButton("Fullbright", function()
+    local Light = game:GetService("Lighting")
+
+    local function dofullbright()
+        Light.Ambient           = Color3.new(1, 1, 1)
+        Light.ColorShift_Bottom = Color3.new(1, 1, 1)
+        Light.ColorShift_Top    = Color3.new(1, 1, 1)
+        Light.FogEnd            = 100000
+        Light.FogStart          = 0
+        Light.ClockTime         = 14
+        Light.Brightness        = 2
+        Light.GlobalShadows     = true
+    end
+
+    dofullbright()
+    Light.LightingChanged:Connect(dofullbright)
+end)
+
+-- Noclip
+local NoclipButton = LocalPlayerPage:addToggle("Noclip")
+
+Threads:Add(function()
+    while game:GetService("RunService").Stepped:Wait() do
+        if NoclipButton:IsEnabeld() then
+            for _,v in pairs(LocalPlayer.Character:GetChildren()) do
+                pcall(function()
+                    if v.ClassName == "Part" then
+                        v.CanCollide = false
+                    end
+                end)
+            end
+        end
+    end
+end)
+
+-- Infinity Jump
+local InfinityJumpButton = LocalPlayerPage:addToggle("Infinity Jump")
+
+UserInputService.JumpRequest:Connect(function()
+    if InfinityJumpButton:IsEnabeld() then
+        LocalPlayer.Character:FindFirstChildOfClass'Humanoid':ChangeState("Jumping")
+    end
+end)
+
+-- Suicid
+LocalPlayerPage:addButton("Suicid", function()
+    LocalPlayer.Character:WaitForChild("Humanoid").Health = 0
+end)
+
+-- Fly
+local FlyButton = LocalPlayerPage:addToggle("Fly")
+local ctrl      = {f = 0, b = 0, l = 0, r = 0}
+local lastctrl  = {f = 0, b = 0, l = 0, r = 0}
+local maxspeed  = 50
+local speed     = 0
+local bg        = nil
+local bv        = nil
+
+function Fly()
+    local Torso = LocalPlayer.Character:FindFirstChild("Torso")
+
+    if Torso == nil then
+        Torso = LocalPlayer.Character:FindFirstChild("LowerTorso")
+    end
+
+    if Torso == nil then
+        Torso = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    end
+
+    bg              = Instance.new("BodyGyro", Torso)
+    bg.P            = 9e4
+    bg.maxTorque    = Vector3.new(9e9, 9e9, 9e9)
+    bg.cframe       = Torso.CFrame
+
+    bv          = Instance.new("BodyVelocity", Torso)
+    bv.velocity = Vector3.new(0,0.1,0)
+    bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+
+    repeat wait()
+        LocalPlayer.Character.Humanoid.PlatformStand = true
+        if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
+            speed = speed+.5+(speed/maxspeed)
+            if speed > maxspeed then
+                speed = maxspeed
+            end
+        elseif not (ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0) and speed ~= 0 then
+            speed = speed-1
+            if speed < 0 then
+                speed = 0
+            end
+        end
+        if (ctrl.l + ctrl.r) ~= 0 or (ctrl.f + ctrl.b) ~= 0 then
+            bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r,(ctrl.f+ctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
+            lastctrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
+        elseif (ctrl.l + ctrl.r) == 0 and (ctrl.f + ctrl.b) == 0 and speed ~= 0 then
+            bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lastctrl.f+lastctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lastctrl.l+lastctrl.r,(lastctrl.f+lastctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
+        else
+            bv.velocity = Vector3.new(0,0.1,0)
+        end
+        bg.cframe = game.Workspace.CurrentCamera.CoordinateFrame * CFrame.Angles(-math.rad((ctrl.f+ctrl.b)*50*speed/maxspeed),0,0)
+    until not FlyButton:IsEnabeld()
+    ctrl = {f = 0, b = 0, l = 0, r = 0}
+    lastctrl = {f = 0, b = 0, l = 0, r = 0}
+    speed = 0
+    bg:Destroy()
+    bg = nil
+    bv:Destroy()
+    bv = nil
+    LocalPlayer.Character.Humanoid.PlatformStand = false
+end
+
+Mouse.KeyDown:Connect(function(key)
+    if key:lower() == "w" then
+        ctrl.f = 1
+    elseif key:lower() == "s" then
+        ctrl.b = -1
+    elseif key:lower() == "a" then
+        ctrl.l = -1
+    elseif key:lower() == "d" then
+        ctrl.r = 1
+    end
+end)
+
+Mouse.KeyUp:Connect(function(key)
+    if key:lower() == "w" then
+        ctrl.f = 0
+    elseif key:lower() == "s" then
+        ctrl.b = 0
+    elseif key:lower() == "a" then
+        ctrl.l = 0
+    elseif key:lower() == "d" then
+        ctrl.r = 0
+    end
+end)
+
+FlyButton:SetEnableFunction(function()
+    Fly()
+end)
+
+-- Zoom Distance
+LocalPlayerPage:addInput("Zoom Distance",function (input)
+    LocalPlayer.CameraMaxZoomDistance = input
+end)
+
+-- Universal Page
+local UniversalPage = MagmaHub:addPage("Universal")
+
+-- Magma Dex
+UniversalPage:addButton("Magma Dex", function()
+    local Dex = rawget(game:GetObjects("rbxassetid://8126316565"), 0X1)
+    if type(syn) == "table" and type(syn.protect_gui) == "function" then
+        xpcall(syn.protect_gui, warn, Dex)
+    end
+    Dex.Name, Dex.Parent = "Magma Dex", game:GetService("CoreGui")
+    local function Load(x)
+        if x:IsA("Script") then
+            xpcall(coroutine.wrap(function()
+                local Fenv, FenvMt, RealFenv, Func = {}, {}, {
+                    script = x
+                }, loadstring(x.Source, "=" .. x:GetFullName())
+                FenvMt.__index = function(a, b)
+                    if RealFenv[b] == nil then
+                        return getfenv()[b]
+                    else
+                        return RealFenv[b]
+                    end
+                end
+                FenvMt.__newindex = function(a, b, c)
+                    if RealFenv[b] == nil then
+                        getfenv()[b] = c
+                    else
+                        RealFenv[b] = c
+                    end
+                end
+                setmetatable(Fenv, FenvMt)
+                setfenv(Func, Fenv)
+                return Func()
+            end), warn)
+        end
+        for _, v in pairs(x:GetChildren()) do
+            xpcall(Load, warn, v)
+        end
+    end
+    xpcall(Load, warn, Dex)
+end)
+
+-- CMD-X
+UniversalPage:addButton("CMD-X", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source", true))()
+end)
+
+-- Infinite Yield
+UniversalPage:addButton("Infinite Yield", function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+end)
+
+-- SimpleSpy
+UniversalPage:addButton("SimpleSpy", function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/master/SimpleSpy.lua'))()
+end)
+
+-- F3X
+UniversalPage:addButton("F3X", function()
+    loadstring(game:GetObjects("rbxassetid://4698064966")[1].Source)()
+end)
+
+-- Btools
+UniversalPage:addButton("Btools", function()
+    local hammer        = Instance.new("HopperBin")
+    hammer.Name         = "Hammer"
+    hammer.BinType      = 4
+    hammer.Parent       = LocalPlayer.Backpack
+
+    local cloneTool     = Instance.new("HopperBin")
+    cloneTool.Name      = "Clone"
+    cloneTool.BinType   = 3
+    cloneTool.Parent    = LocalPlayer.Backpack
+
+    local grabTool      = Instance.new("HopperBin")
+    grabTool.Name       = "Grab"
+    grabTool.BinType    = 2
+    grabTool.Parent     = LocalPlayer.Backpack
+end)
+
+-- Anti AFK
+local AntiAFKButton = UniversalPage:addToggle("Anti AFK")
+
+LocalPlayer.Idled:Connect(function()
+    if AntiAFKButton:IsEnabeld() then
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+        MagmaHub:Notify("Reflected idle Kick")
+    end
+end)
+
+-- ESP
+local ESPButton = UniversalPage:addToggle("ESP")
+
+local function HighlightModel(Model)
+    if ESPButton:IsEnabeld() then
+        for _,v in pairs(Model:children())do
+            if Model.Name ~= LocalPlayer.Name then
+                if v:IsA'BasePart'and v.Name~='HumanoidRootPart'then
+                    local bHA           = Instance.new('BoxHandleAdornment',v)
+                    bHA.Adornee         = v
+                    bHA.Size            = v.Name=='Head' and Vector3.new(1.25,1.25,1.25)    or v.Size
+                    bHA.Color3          = v.Name=='Head' and Color3.new(1,0,0)              or v.Name=='Torso' and Color3.new(0,1,0) or Color3.new(0,0,1)
+                    bHA.Transparency    = .5
+                    bHA.ZIndex		    = 1
+                    bHA.AlwaysOnTop	    = true
+                end
+                if #v:children()>0 then
+                    HighlightModel(v)
+                end
+            end
+        end
+    end
+end
+
+local function UnHighlightModel(Model)
+    for _,v in pairs(Model:children())do
+        if v:IsA'BasePart' and v:findFirstChild'BoxHandleAdornment' then
+            v.BoxHandleAdornment:Destroy()
+        end
+        if #v:children() > 0 then
+            UnHighlightModel(v)
+        end
+    end
+end
+
+for _,player in pairs(Players:GetPlayers())do
+    player.Changed:Connect(function()
+        if player ~= nil and player.Character ~= nil  then
+            RunService.Stepped:Wait()
+            HighlightModel(player.Character)
+        end
+    end)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player.Changed:Connect(function()
+        if player ~= nil and player.Character ~= nil then
+            RunService.Stepped:Wait()
+            HighlightModel(player.Character)
+        end
+    end)
+end)
+
+ESPButton.SetDisableFunction(function()
+    for _,player in pairs(Players:GetPlayers())do
+        UnHighlightModel(player.Character)
+    end
+end)
+
+ESPButton.SetEnableFunction(function()
+    for _,player in pairs(Players:GetPlayers())do
+        HighlightModel(player.Character)
+    end
+end)
+
+-- Aimbot GUI
+UniversalPage:addButton("Aimbot GUI", function()
+    local CC = game.Workspace.CurrentCamera
+
+    local ENABLED      = false
+    local ESP_ENABLED  = false
+
+    _G.FREE_FOR_ALL = true
+
+    _G.ESP_BIND    = 52
+    _G.CHANGE_AIM  = 'q'
+
+    _G.AIM_AT = 'Head'
+
+    wait(1)
+
+    local function GetNearestPlayerToMouse()
+        local PLAYERS      = {}
+        local PLAYER_HOLD  = {}
+        local DISTANCES    = {}
+        for i, v in pairs(game.Players:GetPlayers()) do
+            if v ~= LocalPlayer then
+                table.insert(PLAYERS, v)
+            end
+        end
+        for i, v in pairs(PLAYERS) do
+            if _G.FREE_FOR_ALL == false then
+                if v and (v.Character) ~= nil and v.TeamColor ~= LocalPlayer.TeamColor then
+                    local AIM = v.Character:FindFirstChild(_G.AIM_AT)
+                    if AIM ~= nil then
+                        local DISTANCE                 = (AIM.Position - game.Workspace.CurrentCamera.CoordinateFrame.p).magnitude
+                        local RAY                      = Ray.new(game.Workspace.CurrentCamera.CoordinateFrame.p, (Mouse.Hit.p - CC.CoordinateFrame.p).unit * DISTANCE)
+                        local HIT,POS                  = game.Workspace:FindPartOnRay(RAY, game.Workspace)
+                        local DIFF                     = math.floor((POS - AIM.Position).magnitude)
+                        PLAYER_HOLD[v.Name .. i]       = {}
+                        PLAYER_HOLD[v.Name .. i].dist  = DISTANCE
+                        PLAYER_HOLD[v.Name .. i].plr   = v
+                        PLAYER_HOLD[v.Name .. i].diff  = DIFF
+                        table.insert(DISTANCES, DIFF)
+                    end
+                end
+            elseif _G.FREE_FOR_ALL == true then
+                local AIM = v.Character:FindFirstChild(_G.AIM_AT)
+                if AIM ~= nil then
+                    local DISTANCE                 = (AIM.Position - game.Workspace.CurrentCamera.CoordinateFrame.p).magnitude
+                    local RAY                      = Ray.new(game.Workspace.CurrentCamera.CoordinateFrame.p, (Mouse.Hit.p - CC.CoordinateFrame.p).unit * DISTANCE)
+                    local HIT,POS                  = game.Workspace:FindPartOnRay(RAY, game.Workspace)
+                    local DIFF                     = math.floor((POS - AIM.Position).magnitude)
+                    PLAYER_HOLD[v.Name .. i]       = {}
+                    PLAYER_HOLD[v.Name .. i].dist  = DISTANCE
+                    PLAYER_HOLD[v.Name .. i].plr   = v
+                    PLAYER_HOLD[v.Name .. i].diff  = DIFF
+                    table.insert(DISTANCES, DIFF)
+                end
+            end
+        end
+
+        if unpack(DISTANCES) == nil then
+            return false
+        end
+
+        local L_DISTANCE = math.floor(math.min(unpack(DISTANCES)))
+        if L_DISTANCE > 20 then
+            return false
+        end
+
+        for i, v in pairs(PLAYER_HOLD) do
+            if v.diff == L_DISTANCE then
+                return v.plr
+            end
+        end
+        return false
+    end
+
+    local GUI_MAIN                           = Instance.new('ScreenGui', game.CoreGui)
+    local GUI_TARGET                         = Instance.new('TextLabel', GUI_MAIN)
+    local GUI_AIM_AT                         = Instance.new('TextLabel', GUI_MAIN)
+
+    GUI_MAIN.Name                      = 'AIMBOT'
+
+    GUI_TARGET.Size                    = UDim2.new(0,200,0,30)
+    GUI_TARGET.BackgroundTransparency  = 0.5
+    GUI_TARGET.BackgroundColor         = BrickColor.new('Fossil')
+    GUI_TARGET.BorderSizePixel         = 0
+    GUI_TARGET.Position                = UDim2.new(0.5,-100,0,0)
+    GUI_TARGET.Text                    = 'AIMBOT : OFF'
+    GUI_TARGET.TextColor3              = Color3.new(1,1,1)
+    GUI_TARGET.TextStrokeTransparency  = 1
+    GUI_TARGET.TextWrapped             = true
+    GUI_TARGET.FontSize                = 'Size24'
+    GUI_TARGET.Font                    = 'SourceSansBold'
+
+    GUI_AIM_AT.Size                    = UDim2.new(0,200,0,20)
+    GUI_AIM_AT.BackgroundTransparency  = 0.5
+    GUI_AIM_AT.BackgroundColor         = BrickColor.new('Fossil')
+    GUI_AIM_AT.BorderSizePixel         = 0
+    GUI_AIM_AT.Position                = UDim2.new(0.5,-100,0,30)
+    GUI_AIM_AT.Text                    = 'AIMING : HEAD'
+    GUI_AIM_AT.TextColor3              = Color3.new(1,1,1)
+    GUI_AIM_AT.TextStrokeTransparency  = 1
+    GUI_AIM_AT.TextWrapped             = true
+    GUI_AIM_AT.FontSize                = 'Size18'
+    GUI_AIM_AT.Font                    = 'SourceSansBold'
+
+    local TRACK = false
+
+    local function CREATE(BASE, TEAM)
+        local ESP_MAIN                   = Instance.new('BillboardGui', LocalPlayer.PlayerGui)
+        local ESP_DOT                    = Instance.new('Frame', ESP_MAIN)
+        local ESP_NAME                   = Instance.new('TextLabel', ESP_MAIN)
+        
+        ESP_MAIN.Name                    = 'ESP'
+        ESP_MAIN.Adornee                 = BASE
+        ESP_MAIN.AlwaysOnTop             = true
+        ESP_MAIN.ExtentsOffset           = Vector3.new(0, 1, 0)
+        ESP_MAIN.Size                    = UDim2.new(0, 5, 0, 5)
+        
+        ESP_DOT.Name                     = 'DOT'
+        ESP_DOT.BackgroundColor          = BrickColor.new('Bright red')
+        ESP_DOT.BackgroundTransparency   = 0.3
+        ESP_DOT.BorderSizePixel          = 0
+        ESP_DOT.Position                 = UDim2.new(-0.5, 0, -0.5, 0)
+        ESP_DOT.Size                     = UDim2.new(2, 0, 2, 0)
+        ESP_DOT.Visible                  = true
+        ESP_DOT.ZIndex                   = 10
+        
+        ESP_NAME.Name                    = 'NAME'
+        ESP_NAME.BackgroundColor3        = Color3.new(255, 255, 255)
+        ESP_NAME.BackgroundTransparency  = 1
+        ESP_NAME.BorderSizePixel         = 0
+        ESP_NAME.Position                = UDim2.new(0, 0, 0, -40)
+        ESP_NAME.Size                    = UDim2.new(1, 0, 10, 0)
+        ESP_NAME.Visible                 = true
+        ESP_NAME.ZIndex                  = 10
+        ESP_NAME.Font                    = 'ArialBold'
+        ESP_NAME.FontSize                = 'Size14'
+        ESP_NAME.Text                    = BASE.Parent.Name:upper()
+        ESP_NAME.TextColor               = BrickColor.new('Bright red')
+    end
+
+    local function CLEAR()
+        for _,v in pairs(LocalPlayer.PlayerGui:children()) do
+            if v.Name == 'ESP' and v:IsA('BillboardGui') then
+                v:Destroy()
+            end
+        end
+    end
+
+    local function FIND()
+        CLEAR()
+        TRACK = true
+        spawn(function()
+            while wait() do
+                if TRACK then
+                    CLEAR()
+                    for i,v in pairs(game.Players:GetChildren()) do
+                        if v.Character and v.Character:FindFirstChild('Head') then
+                            if _G.FREE_FOR_ALL == false then
+                                if v.TeamColor ~= LocalPlayer.TeamColor then
+                                    if v.Character:FindFirstChild('Head') then
+                                        CREATE(v.Character.Head, true)
+                                    end
+                                end
+                            else
+                                if v.Character:FindFirstChild('Head') then
+                                    CREATE(v.Character.Head, true)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            wait(1)
+        end)
+    end
+
+    Mouse.Button2Down:connect(function()
+        ENABLED = true
+    end)
+
+    Mouse.Button2Up:connect(function()
+        ENABLED = false
+    end)
+
+    Mouse.KeyDown:connect(function(KEY)
+        KEY = KEY:lower():byte()
+        if KEY == _G.ESP_BIND then
+            if ESP_ENABLED == false then
+                FIND()
+                ESP_ENABLED = true
+                print('ESP : ON')
+            elseif ESP_ENABLED == true then
+                wait()
+                CLEAR()
+                TRACK = false
+                ESP_ENABLED = false
+                print('ESP : OFF')
+            end
+        end
+    end)
+
+    Mouse.KeyDown:Connect(function(KEY)
+        if KEY == _G.CHANGE_AIM then
+            if _G.AIM_AT == 'Head' then
+                _G.AIM_AT = 'Torso'
+                GUI_AIM_AT.Text = 'AIMING : TORSO'
+            elseif _G.AIM_AT == 'Torso' then
+                _G.AIM_AT = 'Head'
+                GUI_AIM_AT.Text = 'AIMING : HEAD'
+            end
+        end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        if ENABLED then
+            local TARGET = GetNearestPlayerToMouse()
+            if (TARGET ~= false) then
+                local AIM = TARGET.Character:FindFirstChild(_G.AIM_AT)
+                if AIM then
+                    CC.CoordinateFrame = CFrame.new(CC.CoordinateFrame.p, AIM.CFrame.p)
+                end
+                GUI_TARGET.Text = 'AIMBOT : '.. TARGET.Name:sub(1, 5)
+            else
+                GUI_TARGET.Text = 'AIMBOT : OFF'
+            end
+        end
+    end)
+
+    repeat
+        wait()
+        if ESP_ENABLED == true then
+            FIND()
+        end
+    until ESP_ENABLED == false
+end)
+
+-- FE Invisible
+local FEInvisible = UniversalPage:addToggle("FE Invisible")
+
+local touched 		= false
+local box           = nil
+local loc
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    if FEInvisible:IsEnabeld() then
+        repeat wait() until character.HumanoidRootPart
+        loc = character.HumanoidRootPart.Position
+        character:MoveTo(box.Position + Vector3.new(0,.5,0))
+    end
+end)
+
+FEInvisible:SetEnableFunction(function()
+    if box == nil then
+        box 		    = Instance.new('Part',workspace)
+        box.Anchored 	= true
+        box.CanCollide 	= true
+        box.Size 		= Vector3.new(10,1,10)
+        box.Position 	= Vector3.new(0,10000,0)
+        box.Touched:Connect(function(part)
+            if (part.Parent.Name == LocalPlayer.Name) then
+                if touched == false then
+                    touched = true
+                    if LocalPlayer.Character and FEInvisible:IsEnabeld() then
+                        local no = LocalPlayer.Character.HumanoidRootPart:Clone()
+                        wait(.25)
+                        LocalPlayer.Character.HumanoidRootPart:Destroy()
+                        no.Parent = LocalPlayer.Character
+                        LocalPlayer.Character:MoveTo(loc)
+                        touched = false
+                    end
+                end
+            end
+        end)
+    end
+
+    repeat wait() until LocalPlayer.Character
+    loc = LocalPlayer.Character.HumanoidRootPart.Position
+    LocalPlayer.Character:MoveTo(box.Position + Vector3.new(0,.5,0))
+end)
+
+FEInvisible:SetDisableFunction(function()
+    if LocalPlayer.Character ~= nil then
+        BLP.Refresh()
+    end
+end)
+
+-- Rejoin-Game
+UniversalPage:addButton("Rejoin-Game", function()
+    TeleportService:Teleport(game.PlaceId, LocalPlayer)
+end)
+
+-- Coppy
+if setclipboard ~= nil then
+    local CoppyPage = MagmaHub:addPage("Coppy")
+
+    CoppyPage:addButton("GameId / UniverseId", function()
+        setclipboard(tostring(game.GameId))
+    end)
+
+    CoppyPage:addButton("Position", function()
+        local pos = LocalPlayer.Character.HumanoidRootPart.CFrame.Position
+        setclipboard(math.floor(pos.X)..", "..math.floor(pos.Y)..", "..math.floor(pos.Z))
+    end)
+
+    CoppyPage:addButton("PlaceId", function()
+        setclipboard(tostring(game.PlaceId))
+    end)
+end
+
+if Drawing ~= nil then
+-- Visuals from https://github.com/Exunys
+local Visuals = MagmaHub:addPage("Visuals")
+
+-- Tracers
+Visuals:addButton("Tracers", function()
+    local Typing = false
+
+    _G.SendNotifications = true   -- If set to true then the script would notify you frequently on any changes applied and when loaded / errored. (If a game can detect this, it is recommended to set it to false)
+    _G.DefaultSettings = false   -- If set to true then the tracer script would run with default settings regardless of any changes you made.
+
+    _G.TeamCheck = false   -- If set to true then the script would create tracers only for the enemy team members.
+
+    --[!]-- ONLY ONE OF THESE VALUES SHOULD BE SET TO TRUE TO NOT ERROR THE SCRIPT --[!]--
+
+    _G.FromMouse = false   -- If set to true, the tracers will come from the position of your mouse curson on your screen.
+    _G.FromCenter = false   -- If set to true, the tracers will come from the center of your screen.
+    _G.FromBottom = true   -- If set to true, the tracers will come from the bottom of your screen.
+
+    _G.TracersVisible = true   -- If set to true then the tracers will be visible and vice versa.
+    _G.TracerColor = Color3.fromRGB(255, 80, 10)   -- The color that the tracers would appear as.
+    _G.TracerThickness = 1   -- The thickness of the tracers.
+    _G.TracerTransparency = 0.7   -- The transparency of the tracers.
+
+    _G.ModeSkipKey = Enum.KeyCode.E   -- The key that changes between modes that indicate where will the tracers come from.
+    _G.DisableKey = Enum.KeyCode.Q   -- The key that disables / enables the tracers.
+
+    local function CreateTracers()
+        for _, v in next, Players:GetPlayers() do
+            if v.Name ~= game.Players.LocalPlayer.Name then
+                local TracerLine = Drawing.new("Line")
+        
+                RunService.RenderStepped:Connect(function()
+                    if workspace:FindFirstChild(v.Name) ~= nil and workspace[v.Name]:FindFirstChild("HumanoidRootPart") ~= nil then
+                        local HumanoidRootPart_Position, HumanoidRootPart_Size = workspace[v.Name].HumanoidRootPart.CFrame, workspace[v.Name].HumanoidRootPart.Size * 1
+                        local Vector, OnScreen = Camera:WorldToViewportPoint(HumanoidRootPart_Position * CFrame.new(0, -HumanoidRootPart_Size.Y, 0).p)
+                        
+                        TracerLine.Thickness = _G.TracerThickness
+                        TracerLine.Transparency = _G.TracerTransparency
+                        TracerLine.Color = _G.TracerColor
+
+                        if _G.FromMouse == true and _G.FromCenter == false and _G.FromBottom == false then
+                            TracerLine.From = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+                        elseif _G.FromMouse == false and _G.FromCenter == true and _G.FromBottom == false then
+                            TracerLine.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                        elseif _G.FromMouse == false and _G.FromCenter == false and _G.FromBottom == true then
+                            TracerLine.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                        end
+
+                        if OnScreen == true  then
+                            TracerLine.To = Vector2.new(Vector.X, Vector.Y)
+                            if _G.TeamCheck == true then 
+                                if Players.LocalPlayer.Team ~= v.Team then
+                                    TracerLine.Visible = _G.TracersVisible
+                                else
+                                    TracerLine.Visible = false
+                                end
+                            else
+                                TracerLine.Visible = _G.TracersVisible
+                            end
+                        else
+                            TracerLine.Visible = false
+                        end
+                    else
+                        TracerLine.Visible = false
+                    end
+                end)
+
+                Players.PlayerRemoving:Connect(function()
+                    TracerLine.Visible = false
+                end)
+            end
+        end
+
+        Players.PlayerAdded:Connect(function(Player)
+            Player.CharacterAdded:Connect(function(v)
+                if v.Name ~= game.Players.LocalPlayer.Name then
+                    local TracerLine = Drawing.new("Line")
+            
+                    RunService.RenderStepped:Connect(function()
+                        if workspace:FindFirstChild(v.Name) ~= nil and workspace[v.Name]:FindFirstChild("HumanoidRootPart") ~= nil then
+                            local HumanoidRootPart_Position, HumanoidRootPart_Size = workspace[v.Name].HumanoidRootPart.CFrame, workspace[v.Name].HumanoidRootPart.Size * 1
+                            local Vector, OnScreen = Camera:WorldToViewportPoint(HumanoidRootPart_Position * CFrame.new(0, -HumanoidRootPart_Size.Y, 0).p)
+                            
+                            TracerLine.Thickness = _G.TracerThickness
+                            TracerLine.Transparency = _G.TracerTransparency
+                            TracerLine.Color = _G.TracerColor
+
+                            if _G.FromMouse == true and _G.FromCenter == false and _G.FromBottom == false then
+                                TracerLine.From = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+                            elseif _G.FromMouse == false and _G.FromCenter == true and _G.FromBottom == false then
+                                TracerLine.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                            elseif _G.FromMouse == false and _G.FromCenter == false and _G.FromBottom == true then
+                                TracerLine.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                            end
+
+                            if OnScreen == true  then
+                                TracerLine.To = Vector2.new(Vector.X, Vector.Y)
+                                if _G.TeamCheck == true then 
+                                    if Players.LocalPlayer.Team ~= Player.Team then
+                                        TracerLine.Visible = _G.TracersVisible
+                                    else
+                                        TracerLine.Visible = false
+                                    end
+                                else
+                                    TracerLine.Visible = _G.TracersVisible
+                                end
+                            else
+                                TracerLine.Visible = false
+                            end
+                        else
+                            TracerLine.Visible = false
+                        end
+                    end)
+
+                    Players.PlayerRemoving:Connect(function()
+                        TracerLine.Visible = false
+                    end)
+                end
+            end)
+        end)
+    end
+
+    UserInputService.TextBoxFocused:Connect(function()
+        Typing = true
+    end)
+
+    UserInputService.TextBoxFocusReleased:Connect(function()
+        Typing = false
+    end)
+
+    UserInputService.InputBegan:Connect(function(Input)
+        if Input.KeyCode == _G.ModeSkipKey and Typing == false then
+            if _G.FromMouse == true and _G.FromCenter == false and _G.FromBottom == false and _G.TracersVisible == true then
+                _G.FromCenter = false
+                _G.FromBottom = true
+                _G.FromMouse = false
+
+                if _G.SendNotifications == true then
+                    game:GetService("StarterGui"):SetCore("SendNotification",{
+                        Title = "Exunys Developer";
+                        Text = "Tracers will be now coming from the bottom of your screen (Mode 1)";
+                        Duration = 5;
+                    })
+                end
+            elseif _G.FromMouse == false and _G.FromCenter == false and _G.FromBottom == true and _G.TracersVisible == true then
+                _G.FromCenter = true
+                _G.FromBottom = false
+                _G.FromMouse = false
+
+                if _G.SendNotifications == true then
+                    game:GetService("StarterGui"):SetCore("SendNotification",{
+                        Title = "Exunys Developer";
+                        Text = "Tracers will be now coming from the center of your screen (Mode 2)";
+                        Duration = 5;
+                    })
+                end
+            elseif _G.FromMouse == false and _G.FromCenter == true and _G.FromBottom == false and _G.TracersVisible == true then
+                _G.FromCenter = false
+                _G.FromBottom = false
+                _G.FromMouse = true
+
+                if _G.SendNotifications == true then
+                    game:GetService("StarterGui"):SetCore("SendNotification",{
+                        Title = "Exunys Developer";
+                        Text = "Tracers will be now coming from the position of your mouse cursor on your screen (Mode 3)";
+                        Duration = 5;
+                    })
+                end
+            end
+        elseif Input.KeyCode == _G.DisableKey and Typing == false then
+            _G.TracersVisible = not _G.TracersVisible
+            
+            if _G.SendNotifications == true then
+                game:GetService("StarterGui"):SetCore("SendNotification",{
+                    Title = "Exunys Developer";
+                    Text = "The tracers' visibility is now set to "..tostring(_G.TracersVisible)..".";
+                    Duration = 5;
+                })
+            end
+        end
+    end)
+
+    if _G.DefaultSettings == true then
+        _G.TeamCheck = false
+        _G.FromMouse = false
+        _G.FromCenter = false
+        _G.FromBottom = true
+        _G.TracersVisible = true
+        _G.TracerColor = Color3.fromRGB(40, 90, 255)
+        _G.TracerThickness = 1
+        _G.TracerTransparency = 0.5
+        _G.ModeSkipKey = Enum.KeyCode.E
+        _G.DisableKey = Enum.KeyCode.Q
+    end
+
+    local Success, Errored = pcall(function()
+        CreateTracers()
+    end)
+
+    if Success and not Errored then
+        if _G.SendNotifications == true then
+            game:GetService("StarterGui"):SetCore("SendNotification",{
+                Title = "Exunys Developer";
+                Text = "Tracer script has successfully loaded.";
+                Duration = 5;
+            })
+        end
+    elseif Errored and not Success then
+        if _G.SendNotifications == true then
+            game:GetService("StarterGui"):SetCore("SendNotification",{
+                Title = "Exunys Developer";
+                Text = "Tracer script has errored while loading, please check the developer console! (F9)";
+                Duration = 5;
+            })
+        end
+        TestService:Message("The tracer script has errored, please notify Exunys with the following information :")
+        warn(Errored)
+        print("!! IF THE ERROR IS A FALSE POSITIVE (says that a player cannot be found) THEN DO NOT BOTHER !!")
+    end
+end)
+
+-- Names
+Visuals:addButton("Names", function()
+
+local Typing = false
+
+_G.SendNotifications = true   -- If set to true then the script would notify you frequently on any changes applied and when loaded / errored. (If a game can detect this, it is recommended to set it to false)
+_G.DefaultSettings = false   -- If set to true then the ESP script would run with default settings regardless of any changes you made.
+
+_G.TeamCheck = false   -- If set to true then the script would create ESP only for the enemy team members.
+
+_G.ESPVisible = true   -- If set to true then the ESP will be visible and vice versa.
+_G.TextColor = Color3.fromRGB(255, 80, 10)   -- The color that the boxes would appear as.
+_G.TextSize = 14   -- The size of the text.
+_G.Center = true   -- If set to true then the script would be located at the center of the label.
+_G.Outline = true   -- If set to true then the text would have an outline.
+_G.OutlineColor = Color3.fromRGB(0, 0, 0)   -- The outline color of the text.
+_G.TextTransparency = 0.7   -- The transparency of the text.
+_G.TextFont = Drawing.Fonts.UI   -- The font of the text. (UI, System, Plex, Monospace) 
+
+_G.DisableKey = Enum.KeyCode.Q   -- The key that disables / enables the ESP.
+
+local function CreateESP()
+    for _, v in next, Players:GetPlayers() do
+        if v.Name ~= Players.LocalPlayer.Name then
+            local ESP = Drawing.new("Text")
+
+            RunService.RenderStepped:Connect(function()
+                if workspace:FindFirstChild(v.Name) ~= nil and workspace[v.Name]:FindFirstChild("HumanoidRootPart") ~= nil then
+                    local Vector, OnScreen = Camera:WorldToViewportPoint(workspace[v.Name]:WaitForChild("Head", math.huge).Position)
+
+                    ESP.Size = _G.TextSize
+                    ESP.Center = _G.Center
+                    ESP.Outline = _G.Outline
+                    ESP.OutlineColor = _G.OutlineColor
+                    ESP.Color = _G.TextColor
+                    ESP.Transparency = _G.TextTransparency
+                    ESP.Font = _G.TextFont
+
+                    if OnScreen == true then
+                        local Part1 = workspace:WaitForChild(v.Name, math.huge):WaitForChild("HumanoidRootPart", math.huge).Position
+                        local Part2 = workspace:WaitForChild(Players.LocalPlayer.Name, math.huge):WaitForChild("HumanoidRootPart", math.huge).Position or 0
+                        local Dist = (Part1 - Part2).Magnitude
+                        ESP.Position = Vector2.new(Vector.X, Vector.Y - 25)
+                        ESP.Text = ("("..tostring(math.floor(tonumber(Dist)))..") "..v.Name.." ["..workspace[v.Name].Humanoid.Health.."]")
+                        if _G.TeamCheck == true then 
+                            if Players.LocalPlayer.Team ~= v.Team then
+                                ESP.Visible = _G.ESPVisible
+                            else
+                                ESP.Visible = false
+                            end
+                        else
+                            ESP.Visible = _G.ESPVisible
+                        end
+                    else
+                        ESP.Visible = false
+                    end
+                else
+                    ESP.Visible = false
+                end
+            end)
+
+            Players.PlayerRemoving:Connect(function()
+                ESP.Visible = false
+            end)
+        end
+    end
+
+    Players.PlayerAdded:Connect(function(Player)
+        Player.CharacterAdded:Connect(function(v)
+            if v.Name ~= Players.LocalPlayer.Name then 
+                local ESP = Drawing.new("Text")
+    
+                RunService.RenderStepped:Connect(function()
+                    if workspace:FindFirstChild(v.Name) ~= nil and workspace[v.Name]:FindFirstChild("HumanoidRootPart") ~= nil then
+                        local Vector, OnScreen = Camera:WorldToViewportPoint(workspace[v.Name]:WaitForChild("Head", math.huge).Position)
+    
+                        ESP.Size = _G.TextSize
+                        ESP.Center = _G.Center
+                        ESP.Outline = _G.Outline
+                        ESP.OutlineColor = _G.OutlineColor
+                        ESP.Color = _G.TextColor
+                        ESP.Transparency = _G.TextTransparency
+    
+                        if OnScreen == true then
+                            local Part1 = workspace:WaitForChild(v.Name, math.huge):WaitForChild("HumanoidRootPart", math.huge).Position
+                        local Part2 = workspace:WaitForChild(Players.LocalPlayer.Name, math.huge):WaitForChild("HumanoidRootPart", math.huge).Position or 0
+                            local Dist = (Part1 - Part2).Magnitude
+                            ESP.Position = Vector2.new(Vector.X, Vector.Y - 25)
+                            ESP.Text = ("("..tostring(math.floor(tonumber(Dist)))..") "..v.Name.." ["..workspace[v.Name].Humanoid.Health.."]")
+                            if _G.TeamCheck == true then 
+                                if Players.LocalPlayer.Team ~= Player.Team then
+                                    ESP.Visible = _G.ESPVisible
+                                else
+                                    ESP.Visible = false
+                                end
+                            else
+                                ESP.Visible = _G.ESPVisible
+                            end
+                        else
+                            ESP.Visible = false
+                        end
+                    else
+                        ESP.Visible = false
+                    end
+                end)
+    
+                Players.PlayerRemoving:Connect(function()
+                    ESP.Visible = false
+                end)
+            end
+        end)
+    end)
+end
+
+if _G.DefaultSettings == true then
+    _G.TeamCheck = false
+    _G.ESPVisible = true
+    _G.TextColor = Color3.fromRGB(40, 90, 255)
+    _G.TextSize = 14
+    _G.Center = true
+    _G.Outline = false
+    _G.OutlineColor = Color3.fromRGB(0, 0, 0)
+    _G.DisableKey = Enum.KeyCode.Q
+    _G.TextTransparency = 0.75
+end
+
+UserInputService.TextBoxFocused:Connect(function()
+    Typing = true
+end)
+
+UserInputService.TextBoxFocusReleased:Connect(function()
+    Typing = false
+end)
+
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.KeyCode == _G.DisableKey and Typing == false then
+        _G.ESPVisible = not _G.ESPVisible
+        
+        if _G.SendNotifications == true then
+            game:GetService("StarterGui"):SetCore("SendNotification",{
+                Title = "Exunys Developer";
+                Text = "The ESP's visibility is now set to "..tostring(_G.ESPVisible)..".";
+                Duration = 5;
+            })
+        end
+    end
+end)
+
+local Success, Errored = pcall(function()
+    CreateESP()
+end)
+
+if Success and not Errored then
+    if _G.SendNotifications == true then
+        game:GetService("StarterGui"):SetCore("SendNotification",{
+            Title = "Exunys Developer";
+            Text = "ESP script has successfully loaded.";
+            Duration = 5;
+        })
+    end
+elseif Errored and not Success then
+    if _G.SendNotifications == true then
+        game:GetService("StarterGui"):SetCore("SendNotification",{
+            Title = "Exunys Developer";
+            Text = "ESP script has errored while loading, please check the developer console! (F9)";
+            Duration = 5;
+        })
+    end
+    TestService:Message("The ESP script has errored, please notify Exunys with the following information :")
+    warn(Errored)
+    print("!! IF THE ERROR IS A FALSE POSITIVE (says that a player cannot be found) THEN DO NOT BOTHER !!")
+end
+end)
+
+-- Heads
+Visuals:addButton("Heads", function()
+    local Typing = false
+    
+    _G.SendNotifications = true   -- If set to true then the script would notify you frequently on any changes applied and when loaded / errored. (If a game can detect this, it is recommended to set it to false)
+    _G.DefaultSettings = false   -- If set to true then the heads script would run with default settings regardless of any changes you made.
+    
+    _G.TeamCheck = false   -- If set to true then the script would create head dots only for the enemy team members.
+    
+    _G.HeadDotsVisible = true   -- If set to true then the head dots will be visible and vice versa.
+    _G.DotColor = Color3.fromRGB(255, 80, 10)   -- The color that the head dots would appear as.
+    _G.DotSize = 5   -- The size of the head dot.
+    _G.DotTransparency = 0.7   -- The transparency of the head dot.
+    _G.DotSides = 100   -- How many sides will the dot have.
+    _G.DotThickness = 1   -- How thick will the head dot be.
+    _G.Filled = true   -- If set to true then the circle would be filled and vice versa.
+    
+    _G.DisableKey = Enum.KeyCode.Q   -- The key that disables / enables the head dots.
+    
+    local function CreateHeadDots()
+        for _, v in next, Players:GetPlayers() do
+            if v.Name ~= Players.LocalPlayer.Name then
+                local HeadDot = Drawing.new("Circle")
+    
+                RunService.RenderStepped:Connect(function()
+                    if workspace:FindFirstChild(v.Name) ~= nil and workspace[v.Name]:FindFirstChild("Head") ~= nil then
+                        local Vector, OnScreen = Camera:WorldToViewportPoint(workspace:WaitForChild(v.Name, math.huge).Head.Position)
+    
+                        HeadDot.Color = _G.DotColor
+                        HeadDot.Radius = _G.DotSize
+                        HeadDot.Transparency = _G.DotTransparency
+                        HeadDot.NumSides = _G.DotSides
+                        HeadDot.Thickness = _G.DotThickness
+                        HeadDot.Filled = _G.Filled
+    
+                        if OnScreen == true then
+                            HeadDot.Position = Vector2.new(Vector.X, Vector.Y)
+                            if _G.TeamCheck == true then 
+                                if Players.LocalPlayer.Team ~= v.Team then
+                                    HeadDot.Visible = _G.HeadDotsVisible
+                                else
+                                    HeadDot.Visible = false
+                                end
+                            else
+                                HeadDot.Visible = _G.HeadDotsVisible
+                            end
+                        else
+                            HeadDot.Visible = false
+                        end
+                    else
+                        HeadDot.Visible = false
+                    end
+                end)
+    
+                Players.PlayerRemoving:Connect(function()
+                    HeadDot.Visible = false
+                end)
+            end
+        end
+    
+        Players.PlayerAdded:Connect(function(Player)
+            Player.CharacterAdded:Connect(function(v)
+                if v.Name ~= Players.LocalPlayer.Name then
+                    local HeadDot = Drawing.new("Circle")
+        
+                    RunService.RenderStepped:Connect(function()
+                        if workspace:FindFirstChild(v.Name) ~= nil and workspace[v.Name]:FindFirstChild("Head") ~= nil then
+                            local Vector, OnScreen = Camera:WorldToViewportPoint(workspace:WaitForChild(v.Name, math.huge).Head.Position)
+        
+                            HeadDot.Color = _G.DotColor
+                            HeadDot.Radius = _G.DotSize
+                            HeadDot.Transparency = _G.DotTransparency
+                            HeadDot.NumSides = _G.DotSides
+                            HeadDot.Thickness = _G.DotThickness
+                            HeadDot.Filled = _G.Filled
+        
+                            if OnScreen == true then
+                                HeadDot.Position = Vector2.new(Vector.X, Vector.Y)
+                                if _G.TeamCheck == true then 
+                                    if Players.LocalPlayer.Team ~= Players:GetPlayerFromCharacter(v).Team then
+                                        HeadDot.Visible = _G.HeadDotsVisible
+                                    else
+                                        HeadDot.Visible = false
+                                    end
+                                else
+                                    HeadDot.Visible = _G.HeadDotsVisible
+                                end
+                            else
+                                HeadDot.Visible = false
+                            end
+                        else
+                            HeadDot.Visible = false
+                        end
+                    end)
+    
+                    Players.PlayerRemoving:Connect(function()
+                        HeadDot.Visible = false
+                    end)
+                end
+            end)
+        end)
+    end
+    
+    if _G.DefaultSettings == true then
+        _G.TeamCheck = false
+        _G.HeadDotsVisible = true
+        _G.DotColor = Color3.fromRGB(40, 90, 255)
+        _G.DotSize = 5
+        _G.DotTransparency = 0.65
+        _G.DotSides = 100
+        _G.DotThickness = 1
+        _G.Filled = true
+        _G.DisableKey = Enum.KeyCode.Q
+    end
+    
+    UserInputService.TextBoxFocused:Connect(function()
+        Typing = true
+    end)
+    
+    UserInputService.TextBoxFocusReleased:Connect(function()
+        Typing = false
+    end)
+    
+    UserInputService.InputBegan:Connect(function(Input)
+        if Input.KeyCode == _G.DisableKey and Typing == false then
+            _G.HeadDotsVisible = not _G.HeadDotsVisible
+            
+            if _G.SendNotifications == true then
+                game:GetService("StarterGui"):SetCore("SendNotification",{
+                    Title = "Exunys Developer";
+                    Text = "The Heads's visibility is now set to "..tostring(_G.HeadDotsVisible)..".";
+                    Duration = 5;
+                })
+            end
+        end
+    end)
+    
+    local Success, Errored = pcall(function()
+        CreateHeadDots()
+    end)
+    
+    if Success and not Errored then
+        if _G.SendNotifications == true then
+            game:GetService("StarterGui"):SetCore("SendNotification",{
+                Title = "Exunys Developer";
+                Text = "Heads script has successfully loaded.";
+                Duration = 5;
+            })
+        end
+    elseif Errored and not Success then
+        if _G.SendNotifications == true then
+            game:GetService("StarterGui"):SetCore("SendNotification",{
+                Title = "Exunys Developer";
+                Text = "Heads script has errored while loading, please check the developer console! (F9)";
+                Duration = 5;
+            })
+        end
+        TestService:Message("The heads script has errored, please notify Exunys with the following information :")
+        warn(Errored)
+        print("!! IF THE ERROR IS A FALSE POSITIVE (says that a player cannot be found) THEN DO NOT BOTHER !!")
+    end
+    
+    CreateHeadDots()    
+end)
+
+-- Head
+Visuals:addButton("Boxes", function()
+    local Typing = false
+    
+    _G.SendNotifications = true   -- If set to true then the script would notify you frequently on any changes applied and when loaded / errored. (If a game can detect this, it is recommended to set it to false)
+    _G.DefaultSettings = false   -- If set to true then the boxes script would run with default settings regardless of any changes you made.
+    
+    _G.TeamCheck = false   -- If set to true then the script would create boxes only for the enemy team members.
+    
+    _G.BoxesVisible = true   -- If set to true then the boxes will be visible and vice versa.
+    _G.LineColor = Color3.fromRGB(255, 80, 10)   -- The color that the boxes would appear as.
+    _G.LineThickness = 1   -- The thickness of the boxes.
+    _G.LineTransparency = 0.7   -- The transparency of the boxes.
+    _G.SizeIncrease = 1   -- How much the box's size is increased (The size is multiplied by the value of this variable). (1 is default, anything more then 2 is not recommended) <float> / <int>
+    
+    _G.DisableKey = Enum.KeyCode.Q   -- The key that disables / enables the boxes.
+    
+    local function CreateBoxes()
+        for _, v in next, Players:GetPlayers() do
+            if v.Name ~= Players.LocalPlayer.Name then
+                local TopLeftLine = Drawing.new("Line")
+                local TopRightLine = Drawing.new("Line")
+                local BottomLeftLine = Drawing.new("Line")
+                local BottomRightLine = Drawing.new("Line")
+    
+                RunService.RenderStepped:Connect(function()
+                    if workspace:FindFirstChild(v.Name) ~= nil and workspace[v.Name]:FindFirstChild("HumanoidRootPart") ~= nil then 
+                        TopLeftLine.Thickness = _G.LineThickness
+                        TopLeftLine.Transparency = _G.LineTransparency
+                        TopLeftLine.Color = _G.LineColor
+    
+                        TopRightLine.Thickness = _G.LineThickness
+                        TopRightLine.Transparency = _G.LineTransparency
+                        TopRightLine.Color = _G.LineColor
+    
+                        BottomLeftLine.Thickness = _G.LineThickness
+                        BottomLeftLine.Transparency = _G.LineTransparency
+                        BottomLeftLine.Color = _G.LineColor
+    
+                        BottomRightLine.Thickness = _G.LineThickness
+                        BottomRightLine.Transparency = _G.LineTransparency
+                        BottomRightLine.Color = _G.LineColor
+                        
+                        local HumanoidRootPart_Position, HumanoidRootPart_Size = workspace[v.Name].HumanoidRootPart.CFrame, workspace[v.Name].HumanoidRootPart.Size * _G.SizeIncrease
+    
+                        local TopLeftPosition, TopLeftVisible = Camera:WorldToViewportPoint(HumanoidRootPart_Position * CFrame.new(HumanoidRootPart_Size.X,  HumanoidRootPart_Size.Y, 0).p)
+                        local TopRightPosition, TopRightVisible = Camera:WorldToViewportPoint(HumanoidRootPart_Position * CFrame.new(-HumanoidRootPart_Size.X,  HumanoidRootPart_Size.Y, 0).p)
+                        local BottomLeftPosition, BottomLeftVisible = Camera:WorldToViewportPoint(HumanoidRootPart_Position * CFrame.new(HumanoidRootPart_Size.X, -HumanoidRootPart_Size.Y, 0).p)
+                        local BottomRightPosition, BottomRightVisible = Camera:WorldToViewportPoint(HumanoidRootPart_Position * CFrame.new(-HumanoidRootPart_Size.X, -HumanoidRootPart_Size.Y, 0).p)
+    
+                        if TopLeftVisible == true then
+                            TopLeftLine.From = Vector2.new(TopLeftPosition.X, TopLeftPosition.Y)
+                            TopLeftLine.To = Vector2.new(TopRightPosition.X, TopRightPosition.Y)
+                            if _G.TeamCheck == true then 
+                                if Players.LocalPlayer.Team ~= v.Team then
+                                    TopLeftLine.Visible = _G.BoxesVisible
+                                else
+                                    TopLeftLine.Visible = false
+                                end
+                            else
+                                TopLeftLine.Visible = _G.BoxesVisible
+                            end
+                        else
+                            TopLeftLine.Visible = false
+                        end
+    
+                        if TopRightVisible == true and _G.BoxesVisible == true then
+                            TopRightLine.From = Vector2.new(TopRightPosition.X, TopRightPosition.Y)
+                            TopRightLine.To = Vector2.new(BottomRightPosition.X, BottomRightPosition.Y)
+                            if _G.TeamCheck == true then 
+                                if Players.LocalPlayer.Team ~= v.Team then
+                                    TopRightLine.Visible = _G.BoxesVisible
+                                else
+                                    TopRightLine.Visible = false
+                                end
+                            else
+                                TopRightLine.Visible = _G.BoxesVisible
+                            end
+                        else
+                            TopRightLine.Visible = false
+                        end
+    
+                        if BottomLeftVisible == true and _G.BoxesVisible == true then
+                            BottomLeftLine.From = Vector2.new(BottomLeftPosition.X, BottomLeftPosition.Y)
+                            BottomLeftLine.To = Vector2.new(TopLeftPosition.X, TopLeftPosition.Y)
+                            if _G.TeamCheck == true then 
+                                if Players.LocalPlayer.Team ~= v.Team then
+                                    BottomLeftLine.Visible = _G.BoxesVisible
+                                else
+                                    BottomLeftLine.Visible = false
+                                end
+                            else
+                                BottomLeftLine.Visible = _G.BoxesVisible
+                            end
+                        else
+                            BottomLeftLine.Visible = false
+                        end
+    
+                        if BottomRightVisible == true and _G.BoxesVisible == true then
+                            BottomRightLine.From = Vector2.new(BottomRightPosition.X, BottomRightPosition.Y)
+                            BottomRightLine.To = Vector2.new(BottomLeftPosition.X, BottomLeftPosition.Y)
+                            if _G.TeamCheck == true then 
+                                if Players.LocalPlayer.Team ~= v.Team then
+                                    BottomRightLine.Visible = _G.BoxesVisible
+                                else
+                                    BottomRightLine.Visible = false
+                                end
+                            else
+                                BottomRightLine.Visible = _G.BoxesVisible
+                            end
+                        else
+                            BottomRightLine.Visible = false
+                        end
+                    else
+                        TopRightLine.Visible = false
+                        TopLeftLine.Visible = false
+                        BottomLeftLine.Visible = false
+                        BottomRightLine.Visible = false
+                    end
+                end)
+    
+                Players.PlayerRemoving:Connect(function()
+                    TopRightLine.Visible = false
+                    TopLeftLine.Visible = false
+                    BottomLeftLine.Visible = false
+                    BottomRightLine.Visible = false
+                end)
+            end
+        end
+    
+        Players.PlayerAdded:Connect(function(Player)
+            Player.CharacterAdded:Connect(function(v)
+                if v.Name ~= Players.LocalPlayer.Name then
+                    local TopLeftLine = Drawing.new("Line")
+                    local TopRightLine = Drawing.new("Line")
+                    local BottomLeftLine = Drawing.new("Line")
+                    local BottomRightLine = Drawing.new("Line")
+        
+                    RunService.RenderStepped:Connect(function()
+                        if workspace:FindFirstChild(v.Name) ~= nil and workspace[v.Name]:FindFirstChild("HumanoidRootPart") ~= nil then 
+                            TopLeftLine.Thickness = _G.LineThickness
+                            TopLeftLine.Transparency = _G.LineTransparency
+                            TopLeftLine.Color = _G.LineColor
+        
+                            TopRightLine.Thickness = _G.LineThickness
+                            TopRightLine.Transparency = _G.LineTransparency
+                            TopRightLine.Color = _G.LineColor
+        
+                            BottomLeftLine.Thickness = _G.LineThickness
+                            BottomLeftLine.Transparency = _G.LineTransparency
+                            BottomLeftLine.Color = _G.LineColor
+        
+                            BottomRightLine.Thickness = _G.LineThickness
+                            BottomRightLine.Transparency = _G.LineTransparency
+                            BottomRightLine.Color = _G.LineColor
+                            
+                            local HumanoidRootPart_Position, HumanoidRootPart_Size = workspace[v.Name].HumanoidRootPart.CFrame, workspace[v.Name].HumanoidRootPart.Size * _G.SizeIncrease
+        
+                            local TopLeftPosition, TopLeftVisible = Camera:WorldToViewportPoint(HumanoidRootPart_Position * CFrame.new(HumanoidRootPart_Size.X,  HumanoidRootPart_Size.Y, 0).p)
+                            local TopRightPosition, TopRightVisible = Camera:WorldToViewportPoint(HumanoidRootPart_Position * CFrame.new(-HumanoidRootPart_Size.X,  HumanoidRootPart_Size.Y, 0).p)
+                            local BottomLeftPosition, BottomLeftVisible = Camera:WorldToViewportPoint(HumanoidRootPart_Position * CFrame.new(HumanoidRootPart_Size.X, -HumanoidRootPart_Size.Y, 0).p)
+                            local BottomRightPosition, BottomRightVisible = Camera:WorldToViewportPoint(HumanoidRootPart_Position * CFrame.new(-HumanoidRootPart_Size.X, -HumanoidRootPart_Size.Y, 0).p)
+        
+                            if TopLeftVisible == true then
+                                TopLeftLine.From = Vector2.new(TopLeftPosition.X, TopLeftPosition.Y)
+                                TopLeftLine.To = Vector2.new(TopRightPosition.X, TopRightPosition.Y)
+                                if _G.TeamCheck == true then 
+                                    if Players.LocalPlayer.Team ~= Player.Team then
+                                        TopLeftLine.Visible = _G.BoxesVisible
+                                    else
+                                        TopLeftLine.Visible = false
+                                    end
+                                else
+                                    TopLeftLine.Visible = _G.BoxesVisible
+                                end
+                            else
+                                TopLeftLine.Visible = false
+                            end
+        
+                            if TopRightVisible == true and _G.BoxesVisible == true then
+                                TopRightLine.From = Vector2.new(TopRightPosition.X, TopRightPosition.Y)
+                                TopRightLine.To = Vector2.new(BottomRightPosition.X, BottomRightPosition.Y)
+                                if _G.TeamCheck == true then 
+                                    if Players.LocalPlayer.Team ~= Player.Team then
+                                        TopRightLine.Visible = _G.BoxesVisible
+                                    else
+                                        TopRightLine.Visible = false
+                                    end
+                                else
+                                    TopRightLine.Visible = _G.BoxesVisible
+                                end
+                            else
+                                TopRightLine.Visible = false
+                            end
+        
+                            if BottomLeftVisible == true and _G.BoxesVisible == true then
+                                BottomLeftLine.From = Vector2.new(BottomLeftPosition.X, BottomLeftPosition.Y)
+                                BottomLeftLine.To = Vector2.new(TopLeftPosition.X, TopLeftPosition.Y)
+                                if _G.TeamCheck == true then 
+                                    if Players.LocalPlayer.Team ~= Player.Team then
+                                        BottomLeftLine.Visible = _G.BoxesVisible
+                                    else
+                                        BottomLeftLine.Visible = false
+                                    end
+                                else
+                                    BottomLeftLine.Visible = _G.BoxesVisible
+                                end
+                            else
+                                BottomLeftLine.Visible = false
+                            end
+        
+                            if BottomRightVisible == true and _G.BoxesVisible == true then
+                                BottomRightLine.From = Vector2.new(BottomRightPosition.X, BottomRightPosition.Y)
+                                BottomRightLine.To = Vector2.new(BottomLeftPosition.X, BottomLeftPosition.Y)
+                                if _G.TeamCheck == true then 
+                                    if Players.LocalPlayer.Team ~= Player.Team then
+                                        BottomRightLine.Visible = _G.BoxesVisible
+                                    else
+                                        BottomRightLine.Visible = false
+                                    end
+                                else
+                                    BottomRightLine.Visible = _G.BoxesVisible
+                                end
+                            else
+                                BottomRightLine.Visible = false
+                            end
+                        else
+                            TopRightLine.Visible = false
+                            TopLeftLine.Visible = false
+                            BottomLeftLine.Visible = false
+                            BottomRightLine.Visible = false
+                        end
+                    end)
+        
+                    Players.PlayerRemoving:Connect(function()
+                        TopRightLine.Visible = false
+                        TopLeftLine.Visible = false
+                        BottomLeftLine.Visible = false
+                        BottomRightLine.Visible = false
+                    end)
+                end
+            end)
+        end)
+    end
+    
+    if _G.DefaultSettings == true then
+        _G.TeamCheck = false
+        _G.BoxesVisible = true
+        _G.LineColor = Color3.fromRGB(40, 90, 255)
+        _G.LineThickness = 1
+        _G.LineTransparency = 0.5
+        _G.SizeIncrease = 1.5
+        _G.DisableKey = Enum.KeyCode.Q
+    end
+    
+    UserInputService.TextBoxFocused:Connect(function()
+        Typing = true
+    end)
+    
+    UserInputService.TextBoxFocusReleased:Connect(function()
+        Typing = false
+    end)
+    
+    UserInputService.InputBegan:Connect(function(Input)
+        if Input.KeyCode == _G.DisableKey and Typing == false then
+            _G.BoxesVisible = not _G.BoxesVisible
+            
+            if _G.SendNotifications == true then
+                game:GetService("StarterGui"):SetCore("SendNotification",{
+                    Title = "Exunys Developer";
+                    Text = "The boxes' visibility is now set to "..tostring(_G.BoxesVisible)..".";
+                    Duration = 5;
+                })
+            end
+        end
+    end)
+    
+    local Success, Errored = pcall(function()
+        CreateBoxes()
+    end)
+    
+    if Success and not Errored then
+        if _G.SendNotifications == true then
+            game:GetService("StarterGui"):SetCore("SendNotification",{
+                Title = "Exunys Developer";
+                Text = "Boxes script has successfully loaded.";
+                Duration = 5;
+            })
+        end
+    elseif Errored and not Success then
+        if _G.SendNotifications == true then
+            game:GetService("StarterGui"):SetCore("SendNotification",{
+                Title = "Exunys Developer";
+                Text = "Boxes script has errored while loading, please check the developer console! (F9)";
+                Duration = 5;
+            })
+        end
+        TestService:Message("The boxes script has errored, please notify Exunys with the following information :")
+        warn(Errored)
+        print("!! IF THE ERROR IS A FALSE POSITIVE (says that a player cannot be found) THEN DO NOT BOTHER !!")
+    end
+    
+end)
+
+end
+
+-- Games List
+local GamesPage = MagmaHub:addPage("Games")
+local games     = HttpService:JSONDecode(game:HttpGet("https://raw.githubusercontent.com/Commandcracker/Magma-Hub/main/games.json"))
+
+for _,v in pairs(games) do
+	GamesPage:addButton(v.Name, function()
+		TeleportService:Teleport(v.RootPlace, LocalPlayer)
+	end)
+end
+
+-- Other Games
+local successed, errData = pcall(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Commandcracker/Magma-Hub/main/games/"..game.GameId..".lua"))()
+end)
+
+if successed then
+    --[[
+        local GameInfo = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+        print("Game: "..GameInfo.Name)
+    ]]
+    MagmaHub:Notify("Game Supported")
+elseif errData ~= nil then
+    if errData == "HTTP 404 (Not Found)" then
+        MagmaHub:Notify("Game Not Supported")
+    else
+        MagmaHub:Notify("Failed To load game scripts", 1)
+        warn(errData)
+    end
+end
+
+-- Load
+MagmaHub:load()
